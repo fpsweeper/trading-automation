@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Mail, Clock } from "lucide-react"
+import { toast } from "sonner"
 
 export function VerifyEmailForm() {
   const searchParams = useSearchParams()
@@ -41,10 +42,23 @@ export function VerifyEmailForm() {
     }
 
     try {
-      // TODO: Integrate with actual email verification
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Verify email:", { email, code })
-      // Redirect to dashboard or login after successful verification
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, code })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.log("Error response:", error);
+        toast.error(error.message || "Verification failed");
+        return
+      }
+      localStorage.setItem("registeredEmail", email);
+      toast.success("Email verified successfully!");
+
       window.location.href = "/dashboard"
     } catch (err) {
       setError("Invalid verification code. Please try again.")
@@ -59,12 +73,23 @@ export function VerifyEmailForm() {
     setResendSuccess(false)
 
     try {
-      // TODO: Integrate with actual email resend
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Resend verification code to:", email)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.log("Error response:", error);
+        toast.error(error.message || "Registration failed");
+        return
+      }
+      toast.success("Code resent successfully!");
+
       setResendSuccess(true)
-      setResendCooldown(60) // 60 second cooldown
-      setTimeout(() => setResendSuccess(false), 3000)
     } catch (err) {
       setError("Failed to resend code. Please try again.")
     } finally {

@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Mail, Lock, CheckCircle2 } from "lucide-react"
+import { Meteors } from "@/components/ui/meteors"
+import { BorderBeam } from "@/components/ui/border-beam"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -44,14 +47,25 @@ export default function RegisterPage() {
     }
 
     try {
-      // TODO: Integrate with actual authentication
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Register:", { email, password })
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.log("Error response:", error);
+        toast.error(error.message || "Registration failed");
+        return
+      }
+      localStorage.setItem("registeredEmail", email);
+      toast.success("Account created successfully! Please verify your email.");
       setSuccess(true)
-      // Redirect to email verification after a short delay
-      setTimeout(() => {
-        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`
-      }, 1500)
+      window.location.href = `/verify-email?email=${encodeURIComponent(email)}`
+      return true;
     } catch (err) {
       setError("Failed to create account. Please try again.")
     } finally {
@@ -73,8 +87,8 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Meteors />
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
@@ -84,7 +98,7 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <Card className="p-8 border border-border">
+        <Card className="p-8 border border-border relative overflow-hidden">
           <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Create Account</h1>
           <p className="text-muted-foreground text-center text-sm mb-6">Join the future of trading automation</p>
 
@@ -178,6 +192,8 @@ export default function RegisterPage() {
             >
               {loading ? "Creating account..." : "Create Account"}
             </Button>
+
+
           </form>
 
           <p className="text-center text-muted-foreground text-sm mt-6">
@@ -186,6 +202,12 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
+
+          <BorderBeam
+            duration={6}
+            size={400}
+            className="from-transparent via-red-500 to-transparent"
+          />
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
