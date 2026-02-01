@@ -35,14 +35,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // Check if user is logged in
-    const auth = localStorage.getItem("harvest3_auth")
+    /*const auth = localStorage.getItem("harvest3_auth")
     if (!auth) {
       router.push("/login")
       return
     }
 
     const authData = JSON.parse(auth)
-    setUsername(authData.username)
+    setUsername(authData.username)*/
     setIsAuthenticated(true)
     setLoading(false)
   }, [router])
@@ -109,7 +109,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+      {/*<header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
             </Button>
           </div>
         </div>
-      </header>
+      </header>*/}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -344,11 +344,10 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`${
-                      linkedAccounts.solana
-                        ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                        : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                    } bg-transparent`}
+                    className={`${linkedAccounts.solana
+                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
+                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
+                      } bg-transparent`}
                     onClick={() => handleLinkAccount("solana")}
                   >
                     {linkedAccounts.solana ? (
@@ -387,11 +386,10 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`${
-                      linkedAccounts.twitter
-                        ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                        : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                    } bg-transparent`}
+                    className={`${linkedAccounts.twitter
+                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
+                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
+                      } bg-transparent`}
                     onClick={() => handleLinkAccount("twitter")}
                   >
                     {linkedAccounts.twitter ? (
@@ -430,11 +428,10 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`${
-                      linkedAccounts.discord
-                        ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                        : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                    } bg-transparent`}
+                    className={`${linkedAccounts.discord
+                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
+                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
+                      } bg-transparent`}
                     onClick={() => handleLinkAccount("discord")}
                   >
                     {linkedAccounts.discord ? (

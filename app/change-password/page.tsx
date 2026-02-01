@@ -1,20 +1,21 @@
 "use client"
 
 import React from "react"
-
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Lock, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react"
+import { Lock, CheckCircle, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function ChangePasswordPage() {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { isAuthenticated, logout } = useAuth()
+  const { checkAuth } = useAuth()
+  const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -23,16 +24,6 @@ export default function ChangePasswordPage() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordStrength, setPasswordStrength] = useState(0)
-
-  useEffect(() => {
-    const auth = localStorage.getItem("harvest3_auth")
-    if (!auth) {
-      router.push("/login")
-      return
-    }
-    setIsAuthenticated(true)
-    setLoading(false)
-  }, [router])
 
   const calculatePasswordStrength = (password: string) => {
     let strength = 0
@@ -80,23 +71,48 @@ export default function ChangePasswordPage() {
 
     setSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // In a real app, validate current password and update password
-      if (currentPassword === "admin") {
-        setShowSuccess(true)
-        setCurrentPassword("")
-        setNewPassword("")
-        setConfirmPassword("")
-        setTimeout(() => {
-          setShowSuccess(false)
-        }, 3000)
-      } else {
-        setError("Current password is incorrect")
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/change-password`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      let data = null
+
+      if (!response.ok) {
+        data = await response.json()
+        setError(data.error || "Failed to change password")
+        toast.error(data.error || "Failed to change password")
+        return
       }
+
+      data = await response.text()
+
+      // Success
+      setShowSuccess(true)
+      toast.success(data)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+
+      setTimeout(async () => {
+        setShowSuccess(false)
+        await logout()
+        await checkAuth()
+        router.push('/login')
+      }, 1000)
+
     } catch (err) {
+      console.error('Password change error:', err)
       setError("Failed to change password. Please try again.")
+      toast.error("Failed to change password. Please try again.")
     } finally {
       setSubmitting(false)
     }
@@ -132,23 +148,6 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ArrowLeft className="w-5 h-5 text-primary" />
-            <span className="font-medium">Back to Profile</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">H3</span>
-            </div>
-            <span className="font-bold hidden sm:inline">Harvest 3</span>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
@@ -162,8 +161,8 @@ export default function ChangePasswordPage() {
             <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-green-700">Password changed successfully!</p>
-                <p className="text-sm text-green-600 mt-1">Your password has been updated. Please use your new password for future logins.</p>
+                <p className="font-medium text-green-700 dark:text-green-400">Password changed successfully!</p>
+                <p className="text-sm text-green-600 dark:text-green-500 mt-1">Your password has been updated. Redirecting to profile...</p>
               </div>
             </div>
           )}
@@ -191,9 +190,9 @@ export default function ChangePasswordPage() {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                   required
+                  disabled={submitting}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">For demo: use "admin"</p>
             </div>
 
             {/* New Password */}
@@ -211,6 +210,7 @@ export default function ChangePasswordPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                   required
+                  disabled={submitting}
                 />
               </div>
 
@@ -226,9 +226,8 @@ export default function ChangePasswordPage() {
                     {[...Array(5)].map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          i < passwordStrength ? getPasswordStrengthColor().replace("text-", "bg-") : "bg-secondary"
-                        }`}
+                        className={`h-1 flex-1 rounded-full transition-colors ${i < passwordStrength ? getPasswordStrengthColor().replace("text-", "bg-") : "bg-secondary"
+                          }`}
                       />
                     ))}
                   </div>
@@ -238,10 +237,18 @@ export default function ChangePasswordPage() {
               <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs text-muted-foreground">
                 <p className="font-medium text-foreground text-xs mb-2">Password Requirements:</p>
                 <ul className="space-y-1 list-disc list-inside">
-                  <li className={newPassword.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
-                  <li className={/[A-Z]/.test(newPassword) ? "text-green-600" : ""}>One uppercase letter</li>
-                  <li className={/[0-9]/.test(newPassword) ? "text-green-600" : ""}>One number</li>
-                  <li className={/[^A-Za-z0-9]/.test(newPassword) ? "text-green-600" : ""}>One special character</li>
+                  <li className={newPassword.length >= 8 ? "text-green-600 dark:text-green-400" : ""}>
+                    At least 8 characters
+                  </li>
+                  <li className={/[A-Z]/.test(newPassword) ? "text-green-600 dark:text-green-400" : ""}>
+                    One uppercase letter
+                  </li>
+                  <li className={/[0-9]/.test(newPassword) ? "text-green-600 dark:text-green-400" : ""}>
+                    One number
+                  </li>
+                  <li className={/[^A-Za-z0-9]/.test(newPassword) ? "text-green-600 dark:text-green-400" : ""}>
+                    One special character
+                  </li>
                 </ul>
               </div>
             </div>
@@ -261,6 +268,7 @@ export default function ChangePasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                   required
+                  disabled={submitting}
                 />
               </div>
 
@@ -269,7 +277,7 @@ export default function ChangePasswordPage() {
               )}
 
               {confirmPassword && newPassword === confirmPassword && (
-                <p className="text-xs text-green-600">Passwords match</p>
+                <p className="text-xs text-green-600 dark:text-green-400">Passwords match ✓</p>
               )}
             </div>
 
@@ -287,44 +295,19 @@ export default function ChangePasswordPage() {
                 variant="outline"
                 className="flex-1 border-border bg-transparent"
                 onClick={() => router.back()}
+                disabled={submitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || !currentPassword || !newPassword || !confirmPassword}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={submitting || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {submitting ? "Updating..." : "Update Password"}
               </Button>
             </div>
           </form>
-
-          {/* Additional Security Options */}
-          <div className="mt-8 pt-8 border-t border-border">
-            <h3 className="font-bold text-foreground mb-4">Additional Security Options</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                <div>
-                  <p className="font-medium text-foreground text-sm">Two-Factor Authentication</p>
-                  <p className="text-xs text-muted-foreground mt-1">Add an extra layer of security to your account</p>
-                </div>
-                <Button variant="outline" size="sm" className="border-border bg-transparent">
-                  Enable
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                <div>
-                  <p className="font-medium text-foreground text-sm">Active Sessions</p>
-                  <p className="text-xs text-muted-foreground mt-1">Manage devices logged into your account</p>
-                </div>
-                <Button variant="outline" size="sm" className="border-border bg-transparent">
-                  View
-                </Button>
-              </div>
-            </div>
-          </div>
         </Card>
       </main>
     </div>

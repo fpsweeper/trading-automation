@@ -31,21 +31,29 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Check if user is logged in
-    const auth = localStorage.getItem("harvest3_auth")
+    /*const auth = localStorage.getItem("harvest3_auth")
     if (!auth) {
       router.push("/login")
       return
-    }
+    }*/
 
-    const authData = JSON.parse(auth)
-    setUsername(authData.username)
+    //const authData = JSON.parse(auth)
+    setUsername("Test")
     setIsAuthenticated(true)
     setLoading(false)
-  }, [router])
+  }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("harvest3_auth")
-    router.push("/login")
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      router.push('/')
+    } catch (err) {
+      console.error('Logout failed', err)
+    }
   }
 
   const handleTestConnection = async () => {
@@ -176,7 +184,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+      {/*<header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -206,7 +214,7 @@ export default function DashboardPage() {
             </Button>
           </div>
         </div>
-      </header>
+      </header>*/}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -431,13 +439,12 @@ export default function DashboardPage() {
                   {/* Test Result */}
                   {testResult && (
                     <div
-                      className={`p-4 rounded-lg border flex items-start gap-3 ${
-                        testResult === "success"
-                          ? "bg-green-500/10 border-green-500/30"
-                          : testResult === "error"
-                            ? "bg-red-500/10 border-red-500/30"
-                            : "bg-blue-500/10 border-blue-500/30"
-                      }`}
+                      className={`p-4 rounded-lg border flex items-start gap-3 ${testResult === "success"
+                        ? "bg-green-500/10 border-green-500/30"
+                        : testResult === "error"
+                          ? "bg-red-500/10 border-red-500/30"
+                          : "bg-blue-500/10 border-blue-500/30"
+                        }`}
                     >
                       {testResult === "success" && (
                         <>

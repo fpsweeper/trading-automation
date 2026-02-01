@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Mail, Lock, Chrome, Wallet } from "lucide-react"
+import { toast } from "sonner"
+import GoogleLoginButton from "@/components/GoogleLoginButton"
+import { useAuth } from "@/contexts/AuthContext"
+import { useEffect } from "react"
 
 export default function LoginPage() {
   const { theme } = useTheme()
@@ -22,20 +26,46 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const { checkAuth } = useAuth()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      if (email === "admin@gmail.com" && password === "admin") {
-        localStorage.setItem("harvest3_auth", JSON.stringify({ username: "admin", email }))
-        router.push("/dashboard")
-      } else {
-        setError("Invalid email or password. Demo: admin@gmail.com / admin")
+      let res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        toast.error(error || "Login failed");
+        return;
       }
+
+      const resMe = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!resMe.ok) {
+        const error = await resMe.json().catch(() => ({ error: "Invalid response" }));
+        console.error("Login error:", resMe.status, error);
+      } else {
+        const data = await resMe.json();
+        console.log("User data:", data);
+      }
+
+
+      toast.success("Login successful!");
+      await checkAuth()
+      router.push("/dashboard")
+
     } catch (err) {
+      console.error("Login error:", err)
       setError("Failed to login. Please try again.")
     } finally {
       setLoading(false)
@@ -52,6 +82,7 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
 
   const handleSolanaLogin = async () => {
     if (connected && publicKey) {
@@ -161,17 +192,8 @@ export default function LoginPage() {
 
           {/* OAuth & Wallet Options */}
           <div className="space-y-3 mb-6">
-            <Button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              variant="outline"
-              className="w-full border-border hover:bg-secondary bg-transparent"
-            >
-              <Chrome className="w-5 h-5 mr-2" />
-              Google
-            </Button>
-            <Button
+            <GoogleLoginButton mode="login" />
+            {/*<Button
               type="button"
               onClick={handleSolanaLogin}
               disabled={loading}
@@ -180,7 +202,7 @@ export default function LoginPage() {
             >
               <Wallet className="w-5 h-5 mr-2" />
               {connected ? `Solana (${publicKey?.toString().slice(0, 8)}...)` : "Solana Wallet"}
-            </Button>
+            </Button>*/}
           </div>
 
           <p className="text-center text-muted-foreground text-sm">

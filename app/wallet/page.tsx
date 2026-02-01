@@ -30,14 +30,14 @@ export default function WalletPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
-    const auth = localStorage.getItem("harvest3_auth")
+    /*const auth = localStorage.getItem("harvest3_auth")
     if (!auth) {
       router.push("/login")
       return
     }
 
     const authData = JSON.parse(auth)
-    setUsername(authData.username)
+    setUsername(authData.username)*/
     setIsAuthenticated(true)
     setLoading(false)
   }, [router])
@@ -129,7 +129,7 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+      {/*<header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -156,7 +156,7 @@ export default function WalletPage() {
             </Button>
           </div>
         </div>
-      </header>
+      </header>*/}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

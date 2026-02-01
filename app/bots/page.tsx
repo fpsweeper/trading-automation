@@ -63,14 +63,14 @@ export default function BotsPage() {
   })
 
   useEffect(() => {
-    const auth = localStorage.getItem("harvest3_auth")
+    /*const auth = localStorage.getItem("harvest3_auth")
     if (!auth) {
       router.push("/login")
       return
     }
 
     const authData = JSON.parse(auth)
-    setUsername(authData.username)
+    setUsername(authData.username)*/
     setIsAuthenticated(true)
     setLoading(false)
   }, [router])
@@ -204,7 +204,7 @@ export default function BotsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+      {/*<header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -231,7 +231,7 @@ export default function BotsPage() {
             </Button>
           </div>
         </div>
-      </header>
+      </header>*/}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -311,13 +311,12 @@ export default function BotsPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-bold text-lg text-foreground">{bot.name}</h3>
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        bot.status === "running"
-                          ? "bg-green-500"
-                          : bot.status === "paused"
-                            ? "bg-yellow-500"
-                            : "bg-gray-500"
-                      }`}
+                      className={`w-2 h-2 rounded-full ${bot.status === "running"
+                        ? "bg-green-500"
+                        : bot.status === "paused"
+                          ? "bg-yellow-500"
+                          : "bg-gray-500"
+                        }`}
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">{bot.strategy}</p>
@@ -356,11 +355,10 @@ export default function BotsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`border-border bg-transparent ${
-                      bot.status === "running"
-                        ? "text-yellow-600 hover:bg-yellow-500/10"
-                        : "text-green-600 hover:bg-green-500/10"
-                    }`}
+                    className={`border-border bg-transparent ${bot.status === "running"
+                      ? "text-yellow-600 hover:bg-yellow-500/10"
+                      : "text-green-600 hover:bg-green-500/10"
+                      }`}
                     onClick={() => toggleBotStatus(bot.id)}
                   >
                     {bot.status === "running" ? (

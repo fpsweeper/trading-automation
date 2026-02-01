@@ -12,6 +12,7 @@ import { Mail, Lock, CheckCircle2 } from "lucide-react"
 import { Meteors } from "@/components/ui/meteors"
 import { BorderBeam } from "@/components/ui/border-beam"
 import { toast } from "sonner"
+import GoogleLoginButton from "@/components/GoogleLoginButton"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -193,7 +194,7 @@ export default function RegisterPage() {
               {loading ? "Creating account..." : "Create Account"}
             </Button>
 
-
+            <GoogleLoginButton mode="register" />
           </form>
 
           <p className="text-center text-muted-foreground text-sm mt-6">
