@@ -197,12 +197,12 @@ export default function RegisterPage() {
             <GoogleLoginButton mode="register" />
           </form>
 
-          <p className="text-center text-muted-foreground text-sm mt-6">
+          <div className="text-center text-muted-foreground text-sm mt-6">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline font-medium">
+            <Link href="/login" className="relative z-10 text-primary hover:underline font-medium">
               Sign in
             </Link>
-          </p>
+          </div>
 
           <BorderBeam
             duration={6}

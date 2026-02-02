@@ -205,12 +205,16 @@ export default function LoginPage() {
             </Button>*/}
           </div>
 
-          <p className="text-center text-muted-foreground text-sm">
+          <div className="text-center text-muted-foreground text-sm">
             Don't have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline font-medium">
+            <Link
+              href="/register"
+              className="relative z-10 text-primary hover:underline font-medium"
+            >
               Sign up
             </Link>
-          </p>
+
+          </div>
         </Card>
 
         {/* Disclaimer Footer */}

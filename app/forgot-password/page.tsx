@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -22,12 +23,29 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      // TODO: Integrate with actual password reset
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Reset password for:", email)
+      const response = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || "Failed to send reset email")
+        toast.error(data.error || "Failed to send reset email")
+        return
+      }
+
+      toast.success("Reset code sent to your email!")
       setSubmitted(true)
+
     } catch (err) {
+      console.error('Forgot password error:', err)
       setError("Failed to send reset email. Please try again.")
+      toast.error("Failed to send reset email. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -50,13 +68,20 @@ export default function ForgotPasswordPage() {
             <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-foreground mb-2">Check Your Email</h1>
             <p className="text-muted-foreground mb-6">
-              We've sent a password reset link to <span className="font-medium">{email}</span>
+              We've sent a 6-digit reset code to <span className="font-medium">{email}</span>
             </p>
             <p className="text-sm text-muted-foreground mb-6">
-              The link will expire in 1 hour. If you don't see the email, check your spam folder.
+              The code will expire in 1 hour. If you don't see the email, check your spam folder.
             </p>
+            <Link href="/reset-password">
+              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mb-3">
+                Enter Reset Code
+              </Button>
+            </Link>
             <Link href="/login">
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Back to Login</Button>
+              <Button variant="outline" className="w-full">
+                Back to Login
+              </Button>
             </Link>
           </Card>
         </div>
@@ -80,7 +105,7 @@ export default function ForgotPasswordPage() {
         <Card className="p-8 border border-border">
           <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Reset Password</h1>
           <p className="text-muted-foreground text-center text-sm mb-6">
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we'll send you a code to reset your password
           </p>
 
           {error && (
@@ -104,6 +129,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -113,7 +139,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? "Sending..." : "Send Reset Code"}
             </Button>
           </form>
 
