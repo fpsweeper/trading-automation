@@ -13,31 +13,58 @@ export const metadata: Metadata = {
   title: "Harvest 3 - Trading Automation Platform",
   description:
     "Build, test, and deploy trading strategies with AI-powered automation. Start free, no credit card required.",
-  generator: "v0.app",
-  icons: {
-    icon: [
+  generator: "fpsweeper",
+  metadataBase: new URL("https://harvest3.com"), // Replace with your domain
+  keywords: ["trading", "automation", "crypto", "bot", "AI trading", "algorithmic trading"],
+  authors: [{ name: "fpsweeper" }],
+  openGraph: {
+    title: "Harvest 3 - Trading Automation Platform",
+    description: "Build, test, and deploy trading strategies with AI-powered automation.",
+    type: "website",
+    images: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Harvest 3 Logo",
       },
     ],
-    apple: "/apple-icon.png",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Harvest 3 - Trading Automation Platform",
+    description: "Build, test, and deploy trading strategies with AI-powered automation.",
+    images: ["/opengraph-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon.svg", color: "#008793", type: "image/svg" },
+    ],
+    other: [
+      {
+        rel: "mask-icon",
+        url: "/icon.svg",
+        color: "#008793",
+      },
+    ],
+  },
+  manifest: "/manifest.json", // For PWA (optional)
 }
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", content: "#e0c3fc" },
-    { media: "(prefers-color-scheme: dark)", content: "#1a1a2e" },
+    { media: "(prefers-color-scheme: light)", content: "#008793" }, // Updated to your brand color
+    { media: "(prefers-color-scheme: dark)", content: "#051937" }, // Updated to your dark color
   ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
   userScalable: true,
 }
 
@@ -48,6 +75,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Additional meta tags if needed */}
+      </head>
       <body className={`font-sans antialiased`}>
         <Providers>
           <Header />

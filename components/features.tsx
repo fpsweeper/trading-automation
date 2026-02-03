@@ -1,107 +1,83 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check } from "lucide-react"
+import { Marquee } from "@/components/ui/marquee"
+import { cn } from "@/lib/utils"
+import { Check, Star } from "lucide-react"
 
 const translations = {
   en: {
-    title: "Everything You Need",
-    description: "Comprehensive tools for every stage of your trading journey",
+    title: "Trusted by traders worldwide",
+    subtitle: "Join thousands of successful algorithmic traders",
     features: [
-      "Real-time market data and feeds",
+      "Real-time market data feeds",
       "Custom indicator library",
-      "Multi-strategy portfolio management",
-      "Risk management tools",
-      "Paper trading environment",
+      "Multi-strategy portfolio",
+      "Advanced risk management",
+      "Paper trading sandbox",
       "Live trading integration",
-      "Performance analytics dashboard",
-      "API access for custom solutions",
+      "Performance analytics",
+      "API for custom solutions",
+      "Backtesting engine",
+      "Strategy marketplace",
+      "Community signals",
+      "24/7 monitoring",
+    ],
+    testimonials: [
+      {
+        name: "Alex Chen",
+        role: "Quantitative Trader",
+        content: "Harvest 3 has transformed my trading. The backtesting is incredibly accurate.",
+        rating: 5,
+      },
+      {
+        name: "Sarah Williams",
+        role: "Day Trader",
+        content: "Finally, a platform that actually works. My returns have doubled since switching.",
+        rating: 5,
+      },
+      {
+        name: "Michael Brown",
+        role: "Crypto Trader",
+        content: "The automation features are game-changing. I can sleep while my bots trade.",
+        rating: 5,
+      },
     ],
   },
-  es: {
-    title: "Todo Lo Que Necesitas",
-    description: "Herramientas completas para cada etapa de tu viaje comercial",
-    features: [
-      "Datos y feeds de mercado en tiempo real",
-      "Biblioteca de indicadores personalizada",
-      "Gestión de cartera multiestrategia",
-      "Herramientas de gestión de riesgos",
-      "Entorno de negociación en papel",
-      "Integración de trading en vivo",
-      "Panel de análisis de rendimiento",
-      "Acceso a API para soluciones personalizadas",
-    ],
-  },
-  fr: {
-    title: "Tout Ce Dont Vous Avez Besoin",
-    description: "Des outils complets pour chaque étape de votre parcours commercial",
-    features: [
-      "Données et flux de marché en temps réel",
-      "Bibliothèque d'indicateurs personnalisés",
-      "Gestion de portefeuille multi-stratégies",
-      "Outils de gestion des risques",
-      "Environnement de trading papier",
-      "Intégration du trading en direct",
-      "Tableau de bord d'analyse des performances",
-      "Accès API pour les solutions personnalisées",
-    ],
-  },
-  de: {
-    title: "Alles, Was Sie Brauchen",
-    description: "Umfassende Tools für jede Phase Ihrer Handelsreise",
-    features: [
-      "Echtzeit-Marktdaten und Feeds",
-      "Benutzerdefinierte Indikator-Bibliothek",
-      "Verwaltung von Multi-Strategie-Portfolios",
-      "Risikomanagement-Tools",
-      "Papierhandelsmittel",
-      "Integration von Live-Handel",
-      "Performance-Analytics-Dashboard",
-      "API-Zugriff für benutzerdefinierte Lösungen",
-    ],
-  },
-  ja: {
-    title: "あなたが必要なもの",
-    description: "トレーディングジャーニーのあらゆる段階での包括的なツール",
-    features: [
-      "リアルタイム市場データとフィード",
-      "カスタムインジケーターライブラリ",
-      "マルチ戦略ポートフォリオ管理",
-      "リスク管理ツール",
-      "ペーパートレーディング環境",
-      "ライブトレーディング統合",
-      "パフォーマンス分析ダッシュボード",
-      "カスタムソリューション用のAPIアクセス",
-    ],
-  },
-  pt: {
-    title: "Tudo Que Você Precisa",
-    description: "Ferramentas abrangentes para cada etapa de sua jornada comercial",
-    features: [
-      "Dados de mercado em tempo real e feeds",
-      "Biblioteca de indicadores personalizados",
-      "Gerenciamento de portfólio de múltiplas estratégias",
-      "Ferramentas de gerenciamento de riscos",
-      "Ambiente de negociação em papel",
-      "Integração de trading ao vivo",
-      "Painel de análise de desempenho",
-      "Acesso à API para soluções personalizadas",
-    ],
-  },
-  zh: {
-    title: "您需要的一切",
-    description: "为您的交易之旅的每个阶段提供全面工具",
-    features: [
-      "实时市场数据和源",
-      "自定义指标库",
-      "多策略投资组合管理",
-      "风险管理工具",
-      "模拟交易环境",
-      "实盘交易整合",
-      "性能分析仪表板",
-      "用于自定义解决方案的API访问",
-    ],
-  },
+}
+
+const FeatureCard = ({ feature }: { feature: string }) => {
+  return (
+    <div className="relative w-64 flex-shrink-0">
+      <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
+        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Check className="w-5 h-5 text-primary" />
+        </div>
+        <span className="font-medium">{feature}</span>
+      </div>
+    </div>
+  )
+}
+
+const TestimonialCard = ({ testimonial }: { testimonial: any }) => {
+  return (
+    <div className="relative w-80 flex-shrink-0">
+      <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors">
+        <div className="flex gap-1 mb-4">
+          {[...Array(testimonial.rating)].map((_, i) => (
+            <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+          ))}
+        </div>
+        <p className="text-muted-foreground mb-4 leading-relaxed">
+          "{testimonial.content}"
+        </p>
+        <div>
+          <div className="font-semibold">{testimonial.name}</div>
+          <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function Features() {
@@ -110,37 +86,39 @@ export default function Features() {
   useEffect(() => {
     const savedLang = localStorage.getItem("language") || "en"
     setLanguage(savedLang)
-    const handleStorageChange = () => {
-      const lang = localStorage.getItem("language") || "en"
-      setLanguage(lang)
-    }
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
   const t = translations[language as keyof typeof translations] || translations.en
 
   return (
-    <section className="py-20 sm:py-32">
+    <section className="py-24 sm:py-32 relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">{t.title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl">{t.description}</p>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+            {t.title}
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl">
+            {t.subtitle}
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {t.features.map((feature, idx) => (
-            <div key={idx} className="flex gap-3 items-start">
-              <div className="flex-shrink-0 mt-1">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/20">
-                  <Check className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-foreground">{feature}</p>
-              </div>
-            </div>
-          ))}
+        {/* Features Marquee */}
+        <div className="mb-16">
+          <Marquee pauseOnHover className="[--duration:40s]">
+            {t.features.map((feature, idx) => (
+              <FeatureCard key={idx} feature={feature} />
+            ))}
+          </Marquee>
+        </div>
+
+        {/* Testimonials Marquee */}
+        <div>
+          <Marquee reverse pauseOnHover className="[--duration:50s]">
+            {t.testimonials.map((testimonial, idx) => (
+              <TestimonialCard key={idx} testimonial={testimonial} />
+            ))}
+          </Marquee>
         </div>
       </div>
     </section>

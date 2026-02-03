@@ -1,189 +1,142 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { BarChart3, Zap, Shield, Cpu } from "lucide-react"
+import { BentoCard, BentoGrid } from "@/components/ui/bento-grid"
+import { BarChart3, Zap, Shield, Cpu, LineChart, Bell, Code, Lock } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const translations = {
   en: {
-    title: "Powerful Trading Automation",
-    description: "Everything you need to succeed in algorithmic trading",
+    title: "Everything you need to succeed",
+    subtitle: "Powerful features designed for serious traders",
     features: [
       {
-        title: "Advanced Backtesting",
-        description: "Test strategies against historical data with high-fidelity simulation",
+        name: "Advanced Backtesting",
+        description: "Test strategies against years of historical data with tick-level precision",
         icon: BarChart3,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Learn more",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Lightning Fast Execution",
-        description: "Execute trades in milliseconds with optimized infrastructure",
+        name: "Lightning Fast",
+        description: "Execute trades in under 1ms with our optimized infrastructure",
         icon: Zap,
+        className: "col-span-3 lg:col-span-2",
+        cta: "See performance",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Enterprise Security",
-        description: "Bank-grade encryption and compliance with financial regulations",
+        name: "Bank-Grade Security",
+        description: "Your funds and data protected by enterprise encryption",
         icon: Shield,
+        className: "col-span-3 lg:col-span-2",
+        cta: "Security details",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 opacity-50" />
+        ),
       },
       {
-        title: "AI-Powered Analytics",
-        description: "Get insights from machine learning models and pattern recognition",
+        name: "AI Analytics",
+        description: "Machine learning models analyze market patterns 24/7",
         icon: Cpu,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Explore AI",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-50" />
+        ),
+      },
+      {
+        name: "Real-time Monitoring",
+        description: "Track performance across all strategies in one dashboard",
+        icon: LineChart,
+        className: "col-span-3 lg:col-span-1",
+        cta: "View demo",
+      },
+      {
+        name: "Smart Alerts",
+        description: "Get notified instantly when market conditions change",
+        icon: Bell,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Set up alerts",
+      },
+      {
+        name: "API Access",
+        description: "Full programmatic control with RESTful and WebSocket APIs",
+        icon: Code,
+        className: "col-span-3 lg:col-span-1",
+        cta: "API docs",
       },
     ],
   },
   es: {
-    title: "Potente Automatización de Trading",
-    description: "Todo lo que necesitas para tener éxito en el trading algorítmico",
+    title: "Todo lo que necesitas para tener éxito",
+    subtitle: "Características poderosas diseñadas para traders serios",
     features: [
       {
-        title: "Pruebas Avanzadas",
-        description: "Prueba estrategias contra datos históricos con simulación de alta fidelidad",
+        name: "Backtesting Avanzado",
+        description: "Prueba estrategias con años de datos históricos con precisión de tick",
         icon: BarChart3,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Más información",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Ejecución Ultrarrápida",
-        description: "Ejecuta operaciones en milisegundos con infraestructura optimizada",
+        name: "Ultrarrápido",
+        description: "Ejecuta operaciones en menos de 1ms con infraestructura optimizada",
         icon: Zap,
+        className: "col-span-3 lg:col-span-2",
+        cta: "Ver rendimiento",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Seguridad Empresarial",
-        description: "Encriptación de nivel bancario y cumplimiento de regulaciones financieras",
+        name: "Seguridad Bancaria",
+        description: "Tus fondos y datos protegidos por encriptación empresarial",
         icon: Shield,
+        className: "col-span-3 lg:col-span-2",
+        cta: "Detalles de seguridad",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Análisis Impulsado por IA",
-        description: "Obtén información de modelos de aprendizaje automático",
+        name: "Análisis IA",
+        description: "Modelos de aprendizaje automático analizan patrones 24/7",
         icon: Cpu,
-      },
-    ],
-  },
-  fr: {
-    title: "Automatisation Puissante du Trading",
-    description: "Tout ce dont vous avez besoin pour réussir le trading algorithmique",
-    features: [
-      {
-        title: "Backtesting Avancé",
-        description: "Testez les stratégies par rapport aux données historiques avec simulation haute fidélité",
-        icon: BarChart3,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Explorar IA",
+        background: (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-50" />
+        ),
       },
       {
-        title: "Exécution Éclair Rapide",
-        description: "Exécutez les transactions en millisecondes avec infrastructure optimisée",
-        icon: Zap,
+        name: "Monitoreo en Tiempo Real",
+        description: "Rastrea el rendimiento en todas las estrategias en un panel",
+        icon: LineChart,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Ver demo",
       },
       {
-        title: "Sécurité Entreprise",
-        description: "Chiffrement de niveau bancaire et conformité aux réglementations financières",
-        icon: Shield,
+        name: "Alertas Inteligentes",
+        description: "Recibe notificaciones instantáneas cuando cambian las condiciones",
+        icon: Bell,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Configurar alertas",
       },
       {
-        title: "Analyse Alimentée par l'IA",
-        description: "Obtenez des informations à partir de modèles d'apprentissage automatique",
-        icon: Cpu,
-      },
-    ],
-  },
-  de: {
-    title: "Leistungsstarke Handelsautomation",
-    description: "Alles, was Sie für den Erfolg im algorithmischen Handel benötigen",
-    features: [
-      {
-        title: "Fortgeschrittene Backtests",
-        description: "Testen Sie Strategien anhand historischer Daten mit hochfideler Simulation",
-        icon: BarChart3,
-      },
-      {
-        title: "Blitzschnelle Ausführung",
-        description: "Führen Sie Trades in Millisekunden mit optimierter Infrastruktur aus",
-        icon: Zap,
-      },
-      {
-        title: "Sicherheit auf Unternehmensebene",
-        description: "Bankenstandardverschlüsselung und Einhaltung von Finanzvorschriften",
-        icon: Shield,
-      },
-      {
-        title: "KI-gestützte Analytik",
-        description: "Erhalten Sie Erkenntnisse aus Machine-Learning-Modellen",
-        icon: Cpu,
-      },
-    ],
-  },
-  ja: {
-    title: "強力なトレーディング自動化",
-    description: "アルゴリズム取引での成功に必要なすべて",
-    features: [
-      {
-        title: "高度なバックテスト",
-        description: "高忠実度シミュレーションで過去データに対して戦略をテスト",
-        icon: BarChart3,
-      },
-      {
-        title: "光速実行",
-        description: "最適化されたインフラで数ミリ秒で取引を実行",
-        icon: Zap,
-      },
-      {
-        title: "エンタープライズセキュリティ",
-        description: "銀行グレードの暗号化と金融規制への準拠",
-        icon: Shield,
-      },
-      {
-        title: "AI駆動分析",
-        description: "機械学習モデルからの洞察を取得",
-        icon: Cpu,
-      },
-    ],
-  },
-  pt: {
-    title: "Automação Poderosa de Negociação",
-    description: "Tudo que você precisa para ter sucesso no trading algorítmico",
-    features: [
-      {
-        title: "Backtesting Avançado",
-        description: "Teste estratégias com dados históricos com simulação de alta fidelidade",
-        icon: BarChart3,
-      },
-      {
-        title: "Execução Ultrarrápida",
-        description: "Execute negociações em milissegundos com infraestrutura otimizada",
-        icon: Zap,
-      },
-      {
-        title: "Segurança Corporativa",
-        description: "Criptografia em nível bancário e conformidade com regulamentações financeiras",
-        icon: Shield,
-      },
-      {
-        title: "Análise Impulsionada por IA",
-        description: "Obtenha insights de modelos de aprendizado de máquina",
-        icon: Cpu,
-      },
-    ],
-  },
-  zh: {
-    title: "强大的交易自动化",
-    description: "算法交易成功所需的一切",
-    features: [
-      {
-        title: "高级回测",
-        description: "使用高保真模拟针对历史数据测试策略",
-        icon: BarChart3,
-      },
-      {
-        title: "闪电快速执行",
-        description: "使用优化的基础设施在毫秒内执行交易",
-        icon: Zap,
-      },
-      {
-        title: "企业级安全",
-        description: "银行级加密和金融法规合规性",
-        icon: Shield,
-      },
-      {
-        title: "人工智能分析",
-        description: "从机器学习模型获得见解",
-        icon: Cpu,
+        name: "Acceso API",
+        description: "Control programático completo con APIs RESTful y WebSocket",
+        icon: Code,
+        className: "col-span-3 lg:col-span-1",
+        cta: "Documentación API",
       },
     ],
   },
@@ -195,44 +148,41 @@ export default function ProductOverview() {
   useEffect(() => {
     const savedLang = localStorage.getItem("language") || "en"
     setLanguage(savedLang)
-    const handleStorageChange = () => {
-      const lang = localStorage.getItem("language") || "en"
-      setLanguage(lang)
-    }
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
   const t = translations[language as keyof typeof translations] || translations.en
 
   return (
-    <section className="py-20 sm:py-32 bg-card">
+    <section className="py-24 sm:py-32 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/50 to-background -z-10" />
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">{t.title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl">{t.description}</p>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            {t.title}
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl">
+            {t.subtitle}
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {t.features.map((feature, idx) => {
-            const Icon = feature.icon
-            return (
-              <Card key={idx} className="p-6 border border-border hover:border-primary/50 transition-colors">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground text-sm">{feature.description}</p>
-                  </div>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+        {/* Bento Grid */}
+        <BentoGrid className="max-w-7xl mx-auto">
+          {t.features.map((feature, idx) => (
+            <BentoCard
+              key={idx}
+              name={feature.name}
+              className={cn("relative group", feature.className)}
+              background={feature.background}
+              Icon={feature.icon}
+              description={feature.description}
+              href="#"
+              cta={feature.cta}
+            />
+          ))}
+        </BentoGrid>
       </div>
     </section>
   )

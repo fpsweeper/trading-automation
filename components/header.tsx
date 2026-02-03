@@ -6,6 +6,7 @@ import { Moon, Sun, Globe, LogOut, User, Bell, HelpCircle, X, Menu } from "lucid
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
+import { Logo } from "./logo"
 
 const languages = {
   en: { name: "English", flag: "🇬🇧" },
@@ -100,11 +101,8 @@ export default function Header() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">H3</span>
-              </div>
-              <span className="font-bold text-sm sm:text-base">Harvest 3</span>
+            <Link href="/" className="group flex items-center hover:opacity-90 transition-all duration-300">
+              <Logo size="md" variant="default" />
             </Link>
 
             {/* Desktop Actions */}
@@ -200,12 +198,12 @@ export default function Header() {
                                 >
                                   <div
                                     className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.type === "success"
-                                        ? "bg-green-500"
-                                        : notif.type === "warning"
-                                          ? "bg-yellow-500"
-                                          : notif.type === "error"
-                                            ? "bg-red-500"
-                                            : "bg-blue-500"
+                                      ? "bg-green-500"
+                                      : notif.type === "warning"
+                                        ? "bg-yellow-500"
+                                        : notif.type === "error"
+                                          ? "bg-red-500"
+                                          : "bg-blue-500"
                                       }`}
                                   />
                                   <div className="flex-1 min-w-0">
@@ -425,8 +423,8 @@ export default function Header() {
                           key={code}
                           onClick={() => handleLanguageChange(code)}
                           className={`w-full text-left px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${language === code
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted"
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
                             }`}
                         >
                           <span>{flag}</span>
@@ -507,12 +505,12 @@ export default function Header() {
                     >
                       <div
                         className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.type === "success"
-                            ? "bg-green-500"
-                            : notif.type === "warning"
-                              ? "bg-yellow-500"
-                              : notif.type === "error"
-                                ? "bg-red-500"
-                                : "bg-blue-500"
+                          ? "bg-green-500"
+                          : notif.type === "warning"
+                            ? "bg-yellow-500"
+                            : notif.type === "error"
+                              ? "bg-red-500"
+                              : "bg-blue-500"
                           }`}
                       />
                       <div className="flex-1 min-w-0">

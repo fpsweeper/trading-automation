@@ -14,52 +14,52 @@ export default function TermsPrivacyPage() {
     {
       title: '1. Introduction',
       content:
-        'Welcome to Harvest 3. These Terms of Service ("Terms") govern your use of our website, mobile application, and services (collectively, the "Service"). By accessing or using Harvest 3, you agree to be bound by these Terms. If you do not agree to any part of these Terms, you may not use our Service.',
+        'Welcome to Harvest 3. These Terms of Service ("Terms") govern your access to and use of the Harvest 3 website, mobile applications, trading automation tools, and related services (collectively, the "Service"). By using Harvest 3, you agree to be legally bound by these Terms. If you do not agree, you must discontinue use of the Service immediately.',
     },
     {
-      title: '2. User Accounts',
+      title: '2. Eligibility and Accounts',
       content:
-        'You are responsible for maintaining the confidentiality of your account credentials and password. You agree to accept responsibility for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account or password.',
+        'You must be at least 18 years old and legally permitted to use trading platforms in your jurisdiction. You are responsible for safeguarding your account credentials and for all activity conducted through your account. Harvest 3 is not responsible for unauthorized access resulting from your failure to secure your account.',
     },
     {
-      title: '3. User Responsibilities',
+      title: '3. Trading Automation & User Control',
       content:
-        'You agree not to use the Service for any unlawful or prohibited purpose. You agree not to access or search the Service by any means other than our publicly supported interfaces. You agree not to attempt to gain unauthorized access to any portion or feature of the Service.',
+        'Harvest 3 provides software tools that allow users to automate trading strategies on supported exchanges. You retain full control over strategy configuration, activation, and deactivation. We do not initiate trades independently, and all trading activity occurs strictly according to parameters defined by you.',
     },
     {
-      title: '4. Trading Risks',
+      title: '4. No Financial Advice',
       content:
-        'Trading cryptocurrencies and automated trading strategies involve substantial risk of loss. Past performance is not indicative of future results. You acknowledge that you understand the risks involved and accept full responsibility for your trading decisions and losses.',
+        'Harvest 3 does not provide investment, financial, tax, or legal advice. Any information, indicators, or performance data provided through the Service are for informational purposes only and should not be construed as recommendations or guarantees of profit.',
     },
     {
-      title: '5. API Keys and Security',
+      title: '5. Trading Risks',
       content:
-        'You are responsible for all activities that occur through your API keys. We recommend enabling IP whitelisting and using read-only permissions when providing API access. We are not liable for any losses resulting from compromised API keys or unauthorized access.',
+        'Trading digital assets and using automated strategies involve substantial risk, including the potential loss of all invested capital. Market conditions, system latency, exchange outages, and software errors may impact performance. Past results are not indicative of future outcomes. You assume full responsibility for all trading decisions and results.',
     },
     {
-      title: '6. Limitation of Liability',
+      title: '6. API Keys and Security',
       content:
-        'In no event shall Harvest 3 be liable for any indirect, incidental, special, consequential, or punitive damages. Our total liability to you for any claims arising out of or relating to these Terms shall not exceed the amount paid by you to us in the past 12 months.',
+        'You are solely responsible for the creation, permissions, and security of exchange API keys connected to Harvest 3. We strongly recommend using restricted permissions and IP whitelisting where available. Harvest 3 is not liable for losses caused by compromised API credentials or misconfigured permissions.',
     },
     {
-      title: '7. Disclaimer of Warranties',
+      title: '7. Service Availability',
       content:
-        'The Service is provided "as is" without warranties of any kind. We do not warrant that the Service will be uninterrupted, error-free, or free from viruses or other harmful components. You use the Service at your own risk.',
+        'We do not guarantee uninterrupted or error-free operation of the Service. Maintenance, updates, exchange issues, or force majeure events may result in downtime or degraded performance.',
     },
     {
-      title: '8. Modification of Terms',
+      title: '8. Limitation of Liability',
       content:
-        'We reserve the right to modify these Terms at any time. Changes will be effective upon posting to the website. Your continued use of the Service after any modification constitutes your acceptance of the modified Terms.',
+        'To the maximum extent permitted by law, Harvest 3 shall not be liable for any indirect, incidental, consequential, or punitive damages. Our total liability for any claim related to the Service shall not exceed the fees paid by you to Harvest 3 during the twelve (12) months preceding the claim.',
     },
     {
       title: '9. Termination',
       content:
-        'We may terminate or suspend your account and access to the Service at our sole discretion, without notice or liability, for any reason or no reason, including if you violate these Terms.',
+        'We may suspend or terminate your access to the Service at any time, with or without notice, if we believe you have violated these Terms or applicable laws. Upon termination, your right to use the Service immediately ceases.',
     },
     {
       title: '10. Governing Law',
       content:
-        'These Terms are governed by and construed in accordance with the laws of the jurisdiction in which Harvest 3 is incorporated, without regard to its conflict of law principles.',
+        'These Terms are governed by and construed in accordance with the laws of the jurisdiction in which Harvest 3 operates, without regard to conflict of law principles.',
     },
   ]
 
@@ -67,52 +67,52 @@ export default function TermsPrivacyPage() {
     {
       title: '1. Information We Collect',
       content:
-        'We collect information you provide directly, such as name, email address, and account information. We also collect information about your interactions with our Service, including IP address, browser type, and pages visited. Additionally, we collect information from your exchange API connections to facilitate trading services.',
+        'We collect information you provide directly, including name, email address, and account details. We also collect technical data such as IP address, device information, and usage activity. Exchange API data is collected solely to enable trading automation.',
     },
     {
-      title: '2. How We Use Your Information',
+      title: '2. How We Use Information',
       content:
-        'We use your information to provide, maintain, and improve our Service. We use it to communicate with you about updates and changes. We use it to detect and prevent fraudulent transactions and abuse. We may also use your information for analytics and research purposes.',
+        'Your information is used to operate, maintain, and improve the Service, communicate important updates, provide customer support, and prevent fraud or abuse. We may use aggregated data for analytics and performance monitoring.',
     },
     {
-      title: '3. Information Sharing',
+      title: '3. Data Sharing',
       content:
-        'We do not sell, trade, or rent your personal information to third parties. We may share information with service providers who assist us in operating our Service. We may disclose information when required by law or to protect our rights and the safety of our users.',
+        'We do not sell your personal data. Information may be shared with trusted service providers who assist in operating the Service, or when required by law or regulatory authorities.',
     },
     {
       title: '4. Data Security',
       content:
-        'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure. We cannot guarantee absolute security of your information.',
+        'We use industry-standard security practices including encryption, access controls, and secure infrastructure. However, no system is completely secure, and we cannot guarantee absolute protection.',
     },
     {
-      title: '5. API Keys and Exchange Data',
+      title: '5. API Keys & Exchange Data',
       content:
-        'Your API keys are encrypted and stored securely on our servers. We only use your API keys to execute trading commands as directed by you. We never store your exchange passwords. You can revoke API access at any time through your exchange account.',
+        'API keys are encrypted at rest and in transit. Harvest 3 never stores your exchange passwords and only performs actions explicitly authorized by your API permissions.',
     },
     {
-      title: '6. Cookies and Tracking',
+      title: '6. Cookies & Analytics',
       content:
-        'We use cookies and similar tracking technologies to enhance your experience. You can control cookie settings through your browser. We use analytics tools to understand how users interact with our Service and improve functionality.',
+        'Cookies and similar technologies are used to maintain sessions, improve usability, and analyze platform usage. You may control cookies through your browser settings.',
     },
     {
       title: '7. Your Rights',
       content:
-        'You have the right to access your personal information and request corrections. You have the right to request deletion of your account and associated data. You can opt-out of marketing communications at any time by contacting us.',
+        'You may request access, correction, or deletion of your personal data, subject to legal and operational requirements. Account deletion requests can be made through support.',
     },
     {
-      title: '8. Children\'s Privacy',
+      title: '8. Children’s Privacy',
       content:
-        'Our Service is not intended for children under 18 years of age. We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will delete such information immediately.',
+        'Harvest 3 is not intended for individuals under 18 years of age, and we do not knowingly collect data from minors.',
     },
     {
-      title: '9. International Data Transfers',
+      title: '9. International Transfers',
       content:
-        'Your information may be transferred to, stored in, and processed in countries other than your country of residence. By using our Service, you consent to the transfer of your information to countries outside your country of residence.',
+        'Your data may be processed in jurisdictions outside your country of residence. By using the Service, you consent to such transfers.',
     },
     {
-      title: '10. Contact Us',
+      title: '10. Contact',
       content:
-        'If you have questions about our Privacy Policy, please contact us at privacy@harvest3.com. We will respond to your inquiry within 30 days. You can also contact us through our Help & Support page.',
+        'For privacy-related questions, contact us at privacy@harvest3.com. We aim to respond within 30 days.',
     },
   ]
 
@@ -121,93 +121,103 @@ export default function TermsPrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-background/50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-primary hover:underline mb-4">
+      <header className="border-b border-border bg-background/70 backdrop-blur">
+        <div className="container mx-auto px-4 py-8 sm:py-12">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-primary hover:underline mb-4"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
-          <h1 className="text-4xl font-bold mb-4">Terms & Privacy</h1>
-          <p className="text-lg text-muted-foreground">
-            Read our Terms of Service and Privacy Policy to understand how we protect your data
+
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3">
+            Terms & Privacy
+          </h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Learn how Harvest 3 operates, the risks involved in trading
+            automation, and how we protect your data.
           </p>
         </div>
-      </div>
+      </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Tab Selection */}
-        <div className="flex gap-4 mb-8">
-          <button
-            onClick={() => setActiveTab('terms')}
-            className={`px-6 py-3 font-medium rounded-lg transition-colors ${
-              activeTab === 'terms'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-foreground hover:bg-secondary/80'
-            }`}
-          >
-            Terms of Service
-          </button>
-          <button
-            onClick={() => setActiveTab('privacy')}
-            className={`px-6 py-3 font-medium rounded-lg transition-colors ${
-              activeTab === 'privacy'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-foreground hover:bg-secondary/80'
-            }`}
-          >
-            Privacy Policy
-          </button>
+      <main className="container mx-auto px-4 py-8 sm:py-12">
+        {/* Tabs */}
+        <div className="mb-8">
+          <div className="grid grid-cols-2 max-w-md rounded-xl bg-secondary p-1">
+            <button
+              onClick={() => setActiveTab('terms')}
+              className={`py-2 rounded-lg font-medium transition ${activeTab === 'terms'
+                ? 'bg-background shadow text-foreground'
+                : 'text-muted-foreground'
+                }`}
+            >
+              Terms
+            </button>
+            <button
+              onClick={() => setActiveTab('privacy')}
+              className={`py-2 rounded-lg font-medium transition ${activeTab === 'privacy'
+                ? 'bg-background shadow text-foreground'
+                : 'text-muted-foreground'
+                }`}
+            >
+              Privacy
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-4xl">
+        <div className="max-w-full">
           {/* Last Updated */}
-          <Card className="p-6 border border-border mb-8 bg-secondary/20">
+          <Card className="mb-8 p-4 sm:p-6 bg-secondary/30">
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Last Updated:</span> January 23, 2026
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {activeTab === 'terms'
-                ? 'These Terms of Service govern your use of Harvest 3 and all related services.'
-                : 'This Privacy Policy explains how we collect, use, and protect your information.'}
+              <span className="font-medium text-foreground">Last Updated:</span>{' '}
+              January 23, 2026
             </p>
           </Card>
 
-          {/* Sections */}
+          {/* Accordion */}
           <div className="space-y-3">
-            {data.map((section, index) => (
-              <Card
-                key={index}
-                className="border border-border overflow-hidden hover:border-primary/50 transition-colors cursor-pointer"
-                onClick={() => setOpenSection(openSection === index ? null : index)}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold text-foreground pr-4 text-lg">{section.title}</h3>
-                    <ChevronDown
-                      className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${
-                        openSection === index ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </div>
+            {data.map((section, index) => {
+              const isOpen = openSection === index
 
-                  {openSection === index && (
-                    <p className="text-muted-foreground mt-4 leading-relaxed">{section.content}</p>
+              return (
+                <Card key={index} className="border border-border">
+                  <button
+                    onClick={() =>
+                      setOpenSection(isOpen ? null : index)
+                    }
+                    className="w-full text-left p-4 sm:p-6 flex items-start justify-between gap-4"
+                    aria-expanded={isOpen}
+                  >
+                    <span className="font-semibold text-base sm:text-lg">
+                      {section.title}
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''
+                        }`}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-4 pb-4 sm:px-6 sm:pb-6 text-muted-foreground leading-relaxed">
+                      {section.content}
+                    </div>
                   )}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              )
+            })}
           </div>
 
           {/* CTA */}
-          <Card className="mt-12 p-8 border border-primary/50 bg-primary/5 text-center">
-            <h2 className="text-2xl font-bold mb-2">Questions about our policies?</h2>
+          <Card className="mt-12 p-6 sm:p-8 text-center bg-primary/5 border-primary/40">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">
+              Questions or concerns?
+            </h2>
             <p className="text-muted-foreground mb-6">
-              Contact our support team for clarification on any terms or privacy practices.
+              Our support team is happy to clarify anything about our terms or
+              privacy practices.
             </p>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Contact Support
-            </Button>
+            <Button>Contact Support</Button>
           </Card>
         </div>
       </main>
