@@ -11,6 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Lock, ArrowLeft, CheckCircle2, Hash } from "lucide-react"
 import { toast } from "sonner"
+import GlowLine from "@/components/ui/glowline"
+import { ShineBorder } from "@/components/ui/shine-border"
+import TwoStep from "@/components/ui/twostep"
 
 export default function ResetPasswordPage() {
     const router = useRouter()
@@ -124,15 +127,6 @@ export default function ResetPasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background px-4">
                 <div className="w-full max-w-md">
-                    <div className="flex justify-center mb-8">
-                        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold text-lg">H3</span>
-                            </div>
-                            <span className="text-xl font-bold text-foreground">Harvest 3</span>
-                        </Link>
-                    </div>
-
                     <Card className="p-8 border border-border text-center">
                         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                         <h1 className="text-2xl font-bold text-foreground mb-2">Password Reset!</h1>
@@ -149,20 +143,28 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="h-fit flex items-center justify-center bg-background px-4">
             <div className="w-full max-w-md">
-                {/* Logo */}
-                <div className="flex justify-center mb-8">
-                    <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-lg">H3</span>
-                        </div>
-                        <span className="text-xl font-bold text-foreground">Harvest 3</span>
-                    </Link>
+                <div className="w-full flex justify-center items-center py-10 text-4xl font-bold">
+                    <img src="/icon.svg" alt="" />
+                    HARVEST3
                 </div>
-
-                <Card className="p-8 border border-border">
+                <Card className="
+            relative overflow-hidden p-8
+            bg-white/60 dark:bg-white/5
+            backdrop-blur-xl
+            border border-white/20 dark:border-white/10
+            shadow-xl shadow-black/5 dark:shadow-black/30
+            rounded-2xl
+          ">
                     <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Enter Reset Code</h1>
+                    <div className="relative w-full mb-6">
+                        <GlowLine
+                            orientation="horizontal"
+                            position="50%"
+                            color="lightgreen"
+                        />
+                    </div>
                     <p className="text-muted-foreground text-center text-sm mb-6">
                         Enter the 6-digit code we sent to your email and choose a new password
                     </p>
@@ -174,13 +176,12 @@ export default function ResetPasswordPage() {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-                        {/* Reset Code */}
                         <div className="space-y-2">
                             <Label htmlFor="code" className="text-foreground">
                                 Reset Code
                             </Label>
                             <div className="relative">
-                                <Hash className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                                <Hash className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                                 <Input
                                     id="code"
                                     type="text"
@@ -195,13 +196,12 @@ export default function ResetPasswordPage() {
                             </div>
                         </div>
 
-                        {/* New Password */}
                         <div className="space-y-2">
                             <Label htmlFor="new-password" className="text-foreground">
                                 New Password
                             </Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                                 <Input
                                     id="new-password"
                                     type="password"
@@ -235,13 +235,12 @@ export default function ResetPasswordPage() {
                             )}
                         </div>
 
-                        {/* Confirm Password */}
                         <div className="space-y-2">
                             <Label htmlFor="confirm-password" className="text-foreground">
                                 Confirm Password
                             </Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                                 <Input
                                     id="confirm-password"
                                     type="password"
@@ -281,8 +280,10 @@ export default function ResetPasswordPage() {
                             Back to Login
                         </Link>
                     </div>
+                    <ShineBorder shineColor="#A3E635" borderWidth={3} />
                 </Card>
             </div>
         </div>
+
     )
 }

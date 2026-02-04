@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ChevronDown, ArrowLeft } from 'lucide-react'
+import GlowLine from '@/components/ui/glowline'
 
 export default function TermsPrivacyPage() {
   const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>('terms')
@@ -121,7 +122,7 @@ export default function TermsPrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-background/70 backdrop-blur">
+      <header className="bg-background/70 backdrop-blur">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           <Link
             href="/"
@@ -140,6 +141,14 @@ export default function TermsPrivacyPage() {
           </p>
         </div>
       </header>
+
+      <div className="relative w-full mb-6">
+        <GlowLine
+          orientation="horizontal"
+          position="50%"
+          color="lightgreen"
+        />
+      </div>
 
       <main className="container mx-auto px-4 py-8 sm:py-12">
         {/* Tabs */}

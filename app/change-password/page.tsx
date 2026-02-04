@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Lock, CheckCircle, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import { ShineBorder } from "@/components/ui/shine-border"
+import GlowLine from "@/components/ui/glowline"
 
 export default function ChangePasswordPage() {
   const router = useRouter()
@@ -152,11 +154,25 @@ export default function ChangePasswordPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Change Password</h1>
+          <h1 className="text-4xl font-bold mb-2">Change Password</h1>
           <p className="text-muted-foreground">Update your account password to keep your account secure</p>
         </div>
 
-        <Card className="p-8 border border-border max-w-2xl">
+        <div className="relative w-full mb-20">
+          <GlowLine
+            orientation="horizontal"
+            position="50%"
+            color="lightgreen"
+          />
+        </div>
+        <Card className="
+            relative overflow-hidden p-8
+            bg-white/60 dark:bg-white/5
+            backdrop-blur-xl
+            border border-white/20 dark:border-white/10
+            shadow-xl shadow-black/5 dark:shadow-black/30
+            rounded-2xl
+          ">
           {showSuccess && (
             <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -181,7 +197,7 @@ export default function ChangePasswordPage() {
                 Current Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <Input
                   id="current-password"
                   type="password"
@@ -201,7 +217,7 @@ export default function ChangePasswordPage() {
                 New Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <Input
                   id="new-password"
                   type="password"
@@ -259,7 +275,7 @@ export default function ChangePasswordPage() {
                 Confirm New Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <Input
                   id="confirm-password"
                   type="password"
@@ -308,6 +324,7 @@ export default function ChangePasswordPage() {
               </Button>
             </div>
           </form>
+          <ShineBorder shineColor="#A3E635" borderWidth={3} />
         </Card>
       </main>
     </div>

@@ -7,7 +7,7 @@ import { ReactNode } from 'react'
 
 export function Providers({ children }: { children: ReactNode }) {
     return (
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+        <GoogleOAuthProvider locale="en" clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
             <AuthProvider>
                 <SolanaProvider>
                     {children}

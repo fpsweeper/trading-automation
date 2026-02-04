@@ -98,9 +98,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">H3</span>
-              </div>
+              <img src="/icon.svg" width="40" height="40" />
               <span className="font-bold text-lg">{t.company}</span>
             </div>
             <p className="text-sm text-muted-foreground">

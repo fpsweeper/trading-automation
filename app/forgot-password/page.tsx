@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
+import GlowLine from "@/components/ui/glowline"
+import { ShineBorder } from "@/components/ui/shine-border"
+import { TypingAnimation } from "@/components/ui/typing-animation"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -55,14 +58,6 @@ export default function ForgotPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md">
-          <div className="flex justify-center mb-8">
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">H3</span>
-              </div>
-              <span className="text-xl font-bold text-foreground">Harvest 3</span>
-            </Link>
-          </div>
 
           <Card className="p-8 border border-border text-center">
             <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
@@ -90,20 +85,29 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">H3</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">Harvest 3</span>
-          </Link>
-        </div>
+    <div className="h-fit flex items-center justify-center bg-background px-4 py-4">
 
-        <Card className="p-8 border border-border">
-          <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Reset Password</h1>
+      <div className="w-full max-w-md">
+        <div className="w-full flex justify-center items-center py-10 text-4xl font-bold">
+          <img src="/icon.svg" alt="" />
+          HARVEST3
+        </div>
+        <Card className="
+            relative overflow-hidden p-8
+            bg-white/60 dark:bg-white/5
+            backdrop-blur-xl
+            border border-white/20 dark:border-white/10
+            shadow-xl shadow-black/5 dark:shadow-black/30
+            rounded-2xl
+          ">
+          <h1 className="text-4xl font-bold text-foreground mb-2 text-center">Reset Password</h1>
+          <div className="relative w-full mb-6">
+            <GlowLine
+              orientation="horizontal"
+              position="50%"
+              color="lightgreen"
+            />
+          </div>
           <p className="text-muted-foreground text-center text-sm mb-6">
             Enter your email address and we'll send you a code to reset your password
           </p>
@@ -120,7 +124,7 @@ export default function ForgotPasswordPage() {
                 Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -147,6 +151,7 @@ export default function ForgotPasswordPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Login
           </Link>
+          <ShineBorder shineColor="#A3E635" borderWidth={3} />
         </Card>
       </div>
     </div>

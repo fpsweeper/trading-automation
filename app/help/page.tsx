@@ -15,7 +15,9 @@ import {
   HelpCircle,
   BookOpen,
   ArrowRight,
+  Construction,
 } from "lucide-react"
+import GlowLine from "@/components/ui/glowline"
 
 export default function HelpPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
@@ -108,6 +110,32 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
+      <div className="bg-background/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h1 className="text-4xl font-bold mb-4">Help & Support</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Find answers to common questions, explore our guides, and get in touch with our support team.
+          </p>
+        </div>
+      </div>
+      <div className="relative w-full mb-6">
+        <GlowLine
+          orientation="horizontal"
+          position="50%"
+          color="lightgreen"
+        />
+      </div>
+      <div className="w-full flex justify-center items-center py-15 text-5xl min-h-[30vh] text-center flex-wrap">
+        <Construction className="w-50 h-50" />
+        <div className="w-full text-center">Under Construction</div>
+
+      </div>
+
+    </div>
+  )
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
       <div className="border-b border-border bg-background/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h1 className="text-4xl font-bold mb-4">Help & Support</h1>
@@ -136,9 +164,8 @@ export default function HelpPage() {
                   <div className="flex items-start justify-between">
                     <h3 className="font-medium text-foreground pr-4 text-lg">{faq.question}</h3>
                     <ChevronDown
-                      className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${
-                        openFaq === index ? "rotate-180" : ""
-                      }`}
+                      className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${openFaq === index ? "rotate-180" : ""
+                        }`}
                     />
                   </div>
 

@@ -16,6 +16,8 @@ import { toast } from "sonner"
 import GoogleLoginButton from "@/components/GoogleLoginButton"
 import { useAuth } from "@/contexts/AuthContext"
 import { useEffect } from "react"
+import { ShineBorder } from "@/components/ui/shine-border"
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
 export default function LoginPage() {
   const { theme } = useTheme()
@@ -103,19 +105,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <AnimatedGridPattern />
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">H3</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">Harvest 3</span>
-          </Link>
-        </div>
 
-        <Card className="p-8 border border-border">
-          <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Welcome Back</h1>
+        <Card className="
+            relative overflow-hidden p-8
+            bg-white/60 dark:bg-white/5
+            backdrop-blur-xl
+            border border-white/20 dark:border-white/10
+            shadow-xl shadow-black/5 dark:shadow-black/30
+            rounded-2xl
+          ">
+          <h1 className="text-4xl font-bold text-foreground mb-2 text-center">Welcome Back</h1>
           <p className="text-muted-foreground text-center text-sm mb-6">Sign in to your trading automation platform</p>
 
           {error && (
@@ -131,7 +132,7 @@ export default function LoginPage() {
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -149,7 +150,7 @@ export default function LoginPage() {
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-3 top-2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
@@ -190,19 +191,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* OAuth & Wallet Options */}
           <div className="space-y-3 mb-6">
             <GoogleLoginButton mode="login" />
-            {/*<Button
-              type="button"
-              onClick={handleSolanaLogin}
-              disabled={loading}
-              variant="outline"
-              className="w-full border-border hover:bg-secondary bg-transparent"
-            >
-              <Wallet className="w-5 h-5 mr-2" />
-              {connected ? `Solana (${publicKey?.toString().slice(0, 8)}...)` : "Solana Wallet"}
-            </Button>*/}
           </div>
 
           <div className="text-center text-muted-foreground text-sm">
@@ -215,16 +205,16 @@ export default function LoginPage() {
             </Link>
 
           </div>
+          <ShineBorder shineColor="#A3E635" borderWidth={3} />
         </Card>
 
-        {/* Disclaimer Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           By continuing, you agree to our{" "}
-          <Link href="/#disclaimer" className="text-primary hover:underline">
+          <Link href="/terms-privacy" className="text-primary hover:underline">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/#disclaimer" className="text-primary hover:underline">
+          <Link href="/terms-privacy" className="text-primary hover:underline">
             Privacy Policy
           </Link>
         </p>

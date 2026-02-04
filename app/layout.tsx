@@ -1,13 +1,17 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import Header from "@/components/header"
 import { Providers } from "@/components/Providers"
+import { Lato } from "next/font/google"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "700", "900"],
+  display: "swap",
+  variable: "--font-lato", // optional but recommended
+})
 
 export const metadata: Metadata = {
   title: "Harvest 3 - Trading Automation Platform",
@@ -74,7 +78,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={lato.variable}>
       <head>
         {/* Additional meta tags if needed */}
       </head>
