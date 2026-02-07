@@ -181,12 +181,18 @@ export default function ProfilePage() {
     if (isAuthenticated) {
       fetchUserData()
       fetchSolanaWallet()
-      fetchTwitterAccount()
+      //fetchTwitterAccount()
       fetchDiscordAccount()
     }
   }, [isAuthenticated])
 
   useEffect(() => {
+    // Test health endpoint (no auth needed)
+    fetch('https://api.harvest3.com/api/wallet/solana/health')
+      .then(r => r.json())
+      .then(d => console.log('Health check:', d))
+      .catch(e => console.error('Health check failed:', e))
+
     const params = new URLSearchParams(window.location.search)
     const discordStatus = params.get('discord')
 
@@ -202,7 +208,7 @@ export default function ProfilePage() {
   }, [])
 
   // Fetch Twitter account
-  const fetchTwitterAccount = async () => {
+  /*const fetchTwitterAccount = async () => {
     try {
       const token = localStorage.getItem('auth_token')
 
@@ -226,7 +232,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error fetching Twitter account:", error)
     }
-  }
+  }*/
 
   // Link Twitter
   const handleLinkTwitter = async () => {
