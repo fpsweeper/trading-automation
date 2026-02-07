@@ -1,50 +1,64 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { auth0 } from './lib/auth0'
 
 const AUTH_COOKIE_NAME = 'access_token'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+    // ─────────────────────────────────────────────
+    // 1️⃣ Run Auth0 middleware first
+    // ─────────────────────────────────────────────
+    const authResponse = await auth0.middleware(request)
+
+    // If Auth0 returns a response (redirect, callback handling, etc)
+    if (authResponse) {
+        return authResponse
+    }
+
+    // ─────────────────────────────────────────────
+    // 2️⃣ Custom route protection logic
+    // ─────────────────────────────────────────────
     const { pathname } = request.nextUrl
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
 
-    // Normalize pathname (remove trailing slash, but not for root)
+    // Normalize pathname (remove trailing slash except root)
     const path = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
 
-    // Routes
-    const protectedRoutes = ['/dashboard', '/profile', '/change-password', '/wallet', '/bots', '/settings']
+    const protectedRoutes = [
+        '/dashboard',
+        '/profile',
+        '/change-password',
+        '/wallet',
+        '/bots',
+        '/settings',
+    ]
+
     const authRoutes = ['/login', '/register', '/forgot-password']
 
-    console.log('Middleware running for path:', path, 'Has token:', !!token)
-
-    // 1️⃣ Check protected routes - redirect to login if no token
+    // Protected routes → redirect to login if not authenticated
     if (protectedRoutes.includes(path) && !token) {
-        console.log('Redirecting to login - protected route without token')
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(loginUrl)
     }
 
-    // 2️⃣ Check auth routes - redirect to dashboard if already authenticated
+    // Auth routes → redirect to dashboard if already authenticated
     if (authRoutes.includes(path) && token) {
-        console.log('Redirecting to dashboard - auth route with token')
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    console.log('Middleware passed for path:', path)
-    // 3️⃣ All other pages → allow
+    // Allow request
     return NextResponse.next()
 }
 
 export const config = {
     matcher: [
-        '/dashboard/:path*',
-        '/profile/:path*',
-        '/change-password',
-        '/login',
-        '/register',
-        '/wallet',
-        '/bots',
-        '/settings',
-        '/forgot-password',
+        /*
+         * Match all request paths except:
+         * - _next/static (static files)
+         * - _next/image (image optimization)
+         * - favicon.ico, sitemap.xml, robots.txt
+         */
+        '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
     ],
 }

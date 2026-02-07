@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { useAuth } from "@/contexts/AuthContext"
+import { auth0 } from "@/lib/auth0"
 
 interface SolanaWalletData {
   walletAddress: string
@@ -180,7 +181,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchUserData()
-      fetchSolanaWallet()
+      //fetchSolanaWallet()
       //fetchTwitterAccount()
       fetchDiscordAccount()
     }
@@ -338,7 +339,8 @@ export default function ProfilePage() {
       )
 
       // refresh wallet data
-      fetchSolanaWallet()
+      fetchUserData()
+      //fetchSolanaWallet()
 
     } finally {
       setIsVerifying(false)
@@ -401,7 +403,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchUserData()
-      fetchSolanaWallet()
+      //fetchSolanaWallet()
 
     }
   }, [isAuthenticated])
@@ -426,7 +428,16 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json()
-        console.log("Fetched user data:", data)
+
+        if (data.wallet) {
+          setSolanaWallet(data.wallet)
+          setConnections(prev => ({ ...prev, solana: true }))
+        } else {
+          setSolanaWallet(null)
+          setConnections(prev => ({ ...prev, solana: false }))
+        }
+
+        setIsLoadingWallet(false)
         setUserData({
           email: data.email,
           username: "None",
@@ -462,7 +473,6 @@ export default function ProfilePage() {
         setConnections(prev => ({ ...prev, solana: true }))
       } else if (response.status === 404) {
         // No wallet linked
-        console.log("No Solana wallet linked")
         setSolanaWallet(null)
         setConnections(prev => ({ ...prev, solana: false }))
       }
