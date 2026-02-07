@@ -118,11 +118,27 @@ export default function ProfilePage() {
 
     setIsLinkingTwitter(true)
 
-    // Store user email in localStorage temporarily
-    localStorage.setItem('twitter_linking_user', userData.email)
+    try {
+      // ✅ First, prepare the session on backend
+      const prepareRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/prepare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // Important!
+      })
 
-    // Redirect to Twitter OAuth
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
+      if (!prepareRes.ok) {
+        toast.error("Failed to prepare Twitter linking")
+        setIsLinkingTwitter(false)
+        return
+      }
+
+      // Now redirect to Twitter OAuth
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
+    } catch (err) {
+      console.error("Error preparing Twitter link:", err)
+      toast.error("Failed to start Twitter linking")
+      setIsLinkingTwitter(false)
+    }
   }
 
   // Unlink Twitter
