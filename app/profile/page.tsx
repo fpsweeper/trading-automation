@@ -188,7 +188,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // Test health endpoint (no auth needed)
-    fetch('https://api.harvest3.com/api/wallet/solana/health')
+    fetch('https://api.harvest3.com/api/solana/health')
       .then(r => r.json())
       .then(d => console.log('Health check:', d))
       .catch(e => console.error('Health check failed:', e))
@@ -327,7 +327,7 @@ export default function ProfilePage() {
 
       // backend trust after signing
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/verify?walletAddress=${solanaWallet.walletAddress}`,
+        `${process.env.NEXT_PUBLIC_API_URL}api/solana/verify?walletAddress=${solanaWallet.walletAddress}`,
         {
           method: 'POST',
           headers: {
@@ -448,7 +448,7 @@ export default function ProfilePage() {
 
   const fetchSolanaWallet = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/wallet`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/solana/wallet`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -484,7 +484,7 @@ export default function ProfilePage() {
     try {
       const walletAddress = publicKey.toBase58()
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/link`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/solana/link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -519,7 +519,7 @@ export default function ProfilePage() {
     setIsUnlinking(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/unlink`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/solana/unlink`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
