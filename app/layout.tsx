@@ -16,14 +16,14 @@ const lato = Lato({
 export const metadata: Metadata = {
   title: "Harvest 3 - Trading Automation Platform",
   description:
-    "Build, test, and deploy trading strategies with AI-powered automation. Start free, no credit card required.",
+    "Automate your trading strategies with Harvest 3 bots.",
   generator: "fpsweeper",
   metadataBase: new URL("https://harvest3.com"), // Replace with your domain
   keywords: ["trading", "automation", "crypto", "bot", "AI trading", "algorithmic trading"],
   authors: [{ name: "fpsweeper" }],
   openGraph: {
     title: "Harvest 3 - Trading Automation Platform",
-    description: "Build, test, and deploy trading strategies with AI-powered automation.",
+    description: "Automate your trading strategies with Harvest 3 bots.",
     type: "website",
     images: [
       {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Harvest 3 - Trading Automation Platform",
-    description: "Build, test, and deploy trading strategies with AI-powered automation.",
+    description: "Automate your trading strategies with Harvest 3 bots.",
     images: ["/opengraph-image.png"],
   },
   icons: {
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  manifest: "/manifest.json", // For PWA (optional)
+  manifest: "/manifest.json",
 }
 
 export const viewport = {
