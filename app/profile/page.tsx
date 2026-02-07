@@ -133,8 +133,13 @@ export default function ProfilePage() {
 
       const { token } = await prepareRes.json()
 
-      // Redirect with token as state parameter
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter?state=${token}`
+      // ✅ Store in localStorage (survives redirects)
+      localStorage.setItem('twitter_link_token', token)
+
+      console.log("Stored link token:", token)
+
+      // Redirect to Twitter OAuth (without query parameter)
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
     } catch (err) {
       console.error("Error:", err)
       toast.error("Failed to start Twitter linking")
@@ -206,24 +211,53 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
-    // Check for Twitter OAuth callback
-    const params = new URLSearchParams(window.location.search)
-    const twitterStatus = params.get('twitter')
+    const handleTwitterCallback = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const twitterStatus = params.get('twitter')
 
-    if (twitterStatus === 'success') {
-      toast.success("Twitter account linked successfully!")
-      // Remove temporary storage
-      localStorage.removeItem('twitter_linking_user')
-      // Remove query params from URL
-      window.history.replaceState({}, '', '/profile')
-      // Refresh Twitter account data
-      fetchTwitterAccount()
-    } else if (twitterStatus === 'error') {
-      const message = params.get('message') || 'Failed to link Twitter account'
-      toast.error(message)
-      localStorage.removeItem('twitter_linking_user')
-      window.history.replaceState({}, '', '/profile')
+      if (twitterStatus === 'success') {
+        // Check if we have a pending link token
+        const linkToken = localStorage.getItem('twitter_link_token')
+
+        if (linkToken) {
+          console.log("Completing Twitter link with token:", linkToken)
+
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/complete-link`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ linkToken })
+            })
+
+            if (res.ok) {
+              toast.success("Twitter account linked successfully!")
+              fetchTwitterAccount()
+            } else {
+              const error = await res.json()
+              toast.error(error.error || "Failed to complete Twitter linking")
+            }
+          } catch (err) {
+            console.error('Failed to complete Twitter link:', err)
+            toast.error("Failed to complete Twitter linking")
+          } finally {
+            localStorage.removeItem('twitter_link_token')
+          }
+        } else {
+          toast.success("Twitter account linked successfully!")
+          fetchTwitterAccount()
+        }
+
+        window.history.replaceState({}, '', '/profile')
+      } else if (twitterStatus === 'error') {
+        const message = params.get('message') || 'Failed to link Twitter account'
+        toast.error(message)
+        localStorage.removeItem('twitter_link_token')
+        window.history.replaceState({}, '', '/profile')
+      }
     }
+
+    handleTwitterCallback()
   }, [])
 
   // Fetch user data
@@ -276,8 +310,8 @@ export default function ProfilePage() {
 
   const fetchSolanaWallet = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/getWallet`, {
-        method: 'GET',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/wallet`, {
+        method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
