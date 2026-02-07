@@ -29,11 +29,12 @@ import { toast } from "sonner"
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { useAuth } from "@/contexts/AuthContext"
-import { auth0 } from "@/lib/auth0"
+import bs58 from "bs58";
+import nacl from "tweetnacl"
 
 interface SolanaWalletData {
   walletAddress: string
-  isVerified: boolean
+  verified: boolean
   linkedAt: string
   nickname?: string
   isPrimary: boolean
@@ -323,9 +324,25 @@ export default function ProfilePage() {
       setIsVerifying(true)
 
       // just trigger wallet popup
-      const message = new TextEncoder().encode("Verify wallet ownership on HARVEST 3")
-      await signMessage(message)
+      const message = new TextEncoder().encode(
+        "Verify wallet ownership on HARVEST 3"
+      );
 
+      const signature: Uint8Array = await signMessage(message);
+
+      const pubKeyUint8 = bs58.decode(solanaWallet.walletAddress);
+
+      const isValid = nacl.sign.detached.verify(
+        message,
+        signature,
+        pubKeyUint8
+      );
+
+      if (!isValid) {
+        toast.error("Failed to verify wallet ownership")
+        setIsVerifying(false)
+        return
+      }
       // backend trust after signing
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}api/solana/verify?walletAddress=${solanaWallet.walletAddress}`,
@@ -410,7 +427,7 @@ export default function ProfilePage() {
 
   // Handle wallet connection
   useEffect(() => {
-    if (connected && publicKey && !solanaWallet && !isLinking && isAuthenticated) {
+    if (connected && publicKey && !solanaWallet && !isLinking && isAuthenticated && solanaWallet) {
       handleLinkWallet()
     }
   }, [connected, publicKey, solanaWallet, isAuthenticated])
@@ -683,17 +700,17 @@ export default function ProfilePage() {
                       <div>
                         <h3 className="text-lg font-semibold flex items-center gap-2">
                           Solana Wallet
-                          {solanaWallet && solanaWallet.isVerified && (
+                          {solanaWallet && solanaWallet.verified && (
                             <Check className="w-4 h-4 text-green-500" />
                           )}
-                          {solanaWallet && !solanaWallet.isVerified && (
+                          {solanaWallet && !solanaWallet.verified && (
                             <Check className="w-4 h-4 text-orange-500" />
                           )}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {isLoadingWallet ? "Loading..." : solanaWallet ? "Linked & " : "Link your Solana wallet"}
-                          {!isLoadingWallet && solanaWallet && solanaWallet.isVerified && "Verified on " + new Date(solanaWallet.linkedAt).toLocaleDateString()}
-                          {!isLoadingWallet && solanaWallet && !solanaWallet.isVerified && "Unverified"}
+                          {!isLoadingWallet && solanaWallet && solanaWallet.verified && "Verified on " + new Date(solanaWallet.linkedAt).toLocaleDateString()}
+                          {!isLoadingWallet && solanaWallet && !solanaWallet.verified && "Unverified"}
                         </p>
                       </div>
                     </div>
@@ -723,7 +740,7 @@ export default function ProfilePage() {
                           {!connected ? (
                             <WalletMultiButton className="!w-full !justify-center" />
                           ) : (
-                            !solanaWallet.isVerified ? (<Button
+                            !solanaWallet.verified ? (<Button
                               size="sm"
                               variant="outline"
                               className="mt-3 border-green-500/30 text-green-600 hover:bg-green-500/10"
@@ -1088,7 +1105,7 @@ export default function ProfilePage() {
                           <span className="text-xs text-muted-foreground">Solana</span>
                           <div className={cn(
                             "w-2 h-2 rounded-full",
-                            solanaWallet ? (solanaWallet.isVerified ? "bg-green-500" : "bg-orange-500") : "bg-gray-400"
+                            solanaWallet ? (solanaWallet.verified ? "bg-green-500" : "bg-orange-500") : "bg-gray-400"
                           )} />
                         </div>
                         <div className="flex items-center justify-between">
