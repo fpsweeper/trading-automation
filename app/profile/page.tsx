@@ -88,11 +88,14 @@ export default function ProfilePage() {
   // Fetch Twitter account
   const fetchTwitterAccount = async () => {
     try {
+      const token = localStorage.getItem('auth_token')
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -119,10 +122,15 @@ export default function ProfilePage() {
     setIsLinkingTwitter(true)
 
     try {
+      console.log("Starting Twitter linking process...")
+      const auth_token = localStorage.getItem('auth_token')
       // Get linking token
       const prepareRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/prepare`, {
         method: "POST",
-        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth_token}`,
+        },
       })
 
       if (!prepareRes.ok) {
@@ -130,6 +138,7 @@ export default function ProfilePage() {
         setIsLinkingTwitter(false)
         return
       }
+      console.log("Received response from prepare endpoint")
 
       const { token } = await prepareRes.json()
 
@@ -139,7 +148,7 @@ export default function ProfilePage() {
       console.log("Stored link token:", token)
 
       // Redirect to Twitter OAuth (without query parameter)
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter?statte=${encodeURIComponent(token)}`
     } catch (err) {
       console.error("Error:", err)
       toast.error("Failed to start Twitter linking")
@@ -150,11 +159,12 @@ export default function ProfilePage() {
   // Unlink Twitter
   const handleUnlinkTwitter = async () => {
     try {
+      const auth_token = localStorage.getItem('auth_token')
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/unlink`, {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth_token}`,
         },
       })
 
@@ -198,7 +208,10 @@ export default function ProfilePage() {
         `${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/verify?walletAddress=${solanaWallet.walletAddress}`,
         {
           method: 'POST',
-          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
         }
       )
 
@@ -225,8 +238,10 @@ export default function ProfilePage() {
           try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/complete-link`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+              },
               body: JSON.stringify({ linkToken })
             })
 
@@ -277,12 +292,13 @@ export default function ProfilePage() {
   }, [connected, publicKey, solanaWallet, isAuthenticated])
 
   const fetchUserData = async () => {
+    const token = localStorage.getItem('auth_token')
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -312,9 +328,9 @@ export default function ProfilePage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/wallet`, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
       })
 
@@ -348,9 +364,9 @@ export default function ProfilePage() {
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/link`, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
           walletAddress: walletAddress,
@@ -383,9 +399,9 @@ export default function ProfilePage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/unlink`, {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
       })
 

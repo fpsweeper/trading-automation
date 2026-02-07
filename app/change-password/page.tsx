@@ -73,12 +73,14 @@ export default function ChangePasswordPage() {
 
     setSubmitting(true)
     try {
+      const token = localStorage.getItem('auth_token')
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/change-password`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           currentPassword,

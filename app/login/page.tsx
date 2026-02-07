@@ -34,6 +34,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError("")
+
     try {
       // Call Next.js API route (sets Next.js cookie)
       let res = await fetch("/api/login", {
@@ -49,17 +50,26 @@ export default function LoginPage() {
       }
 
       // ✅ ALSO call Spring Boot directly to set its cookie
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/login`, {
+      const resOne = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include", // Important!
       });
+
+      if (!resOne.ok) {
+        const data = await resOne.json();
+        toast.error(data.error || data.message || "Login failed");
+        return;
+      }
+
+      const token = await resOne.text();
+      // ✅ ONLY HERE
+      localStorage.setItem("auth_token", token);
+
 
       const resMe = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
       });
 
       if (!resMe.ok) {
