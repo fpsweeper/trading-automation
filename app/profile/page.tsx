@@ -119,11 +119,10 @@ export default function ProfilePage() {
     setIsLinkingTwitter(true)
 
     try {
-      // ✅ First, prepare the session on backend
+      // Get linking token
       const prepareRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/prepare`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // Important!
+        credentials: "include",
       })
 
       if (!prepareRes.ok) {
@@ -132,10 +131,12 @@ export default function ProfilePage() {
         return
       }
 
-      // Now redirect to Twitter OAuth
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
+      const { token } = await prepareRes.json()
+
+      // Redirect with token as state parameter
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter?state=${token}`
     } catch (err) {
-      console.error("Error preparing Twitter link:", err)
+      console.error("Error:", err)
       toast.error("Failed to start Twitter linking")
       setIsLinkingTwitter(false)
     }
