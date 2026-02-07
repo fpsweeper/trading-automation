@@ -76,14 +76,130 @@ export default function ProfilePage() {
   } | null>(null)
   const [isLinkingTwitter, setIsLinkingTwitter] = useState(false)
 
+  // Add Discord state
+  const [discordAccount, setDiscordAccount] = useState<{
+    discordId: string
+    username: string
+    discriminator: string
+    displayName: string
+    avatarUrl: string
+    linkedAt: string
+  } | null>(null)
+  const [isLinkingDiscord, setIsLinkingDiscord] = useState(false)
+
+  // Fetch Discord account
+  const fetchDiscordAccount = async () => {
+    try {
+      const token = localStorage.getItem('auth_token')
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/discord`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setDiscordAccount(data)
+        setConnections(prev => ({ ...prev, discord: true }))
+      } else if (response.status === 404) {
+        setDiscordAccount(null)
+        setConnections(prev => ({ ...prev, discord: false }))
+      }
+    } catch (error) {
+      console.error("Error fetching Discord account:", error)
+    }
+  }
+
+  // Link Discord
+  const handleLinkDiscord = async () => {
+    if (!userData?.email) {
+      toast.error("User email not found")
+      return
+    }
+
+    setIsLinkingDiscord(true)
+
+    try {
+      const auth_token = localStorage.getItem('auth_token')
+
+      const prepareRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/discord/prepare`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth_token}`,
+        },
+      })
+
+      if (!prepareRes.ok) {
+        toast.error("Failed to prepare Discord linking")
+        setIsLinkingDiscord(false)
+        return
+      }
+
+      const { token } = await prepareRes.json()
+
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/discord?link_token=${encodeURIComponent(token)}`
+    } catch (err) {
+      console.error("Error:", err)
+      toast.error("Failed to start Discord linking")
+      setIsLinkingDiscord(false)
+    }
+  }
+
+  // Unlink Discord
+  const handleUnlinkDiscord = async () => {
+    try {
+      const auth_token = localStorage.getItem('auth_token')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/discord/unlink`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        toast.error(data.error || "Failed to unlink Discord")
+        return
+      }
+
+      setDiscordAccount(null)
+      setConnections(prev => ({ ...prev, discord: false }))
+      toast.success("Discord account unlinked successfully!")
+    } catch (error) {
+      console.error("Error unlinking Discord:", error)
+      toast.error("Failed to unlink Discord")
+    }
+  }
+
   // Add to useEffect
   useEffect(() => {
     if (isAuthenticated) {
       fetchUserData()
       fetchSolanaWallet()
       fetchTwitterAccount()
+      fetchDiscordAccount()
     }
   }, [isAuthenticated])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const discordStatus = params.get('discord')
+
+    if (discordStatus === 'success') {
+      toast.success("Discord account linked successfully!")
+      window.history.replaceState({}, '', '/profile')
+      fetchDiscordAccount()
+    } else if (discordStatus === 'error') {
+      const message = params.get('message') || 'Failed to link Discord account'
+      toast.error(message)
+      window.history.replaceState({}, '', '/profile')
+    }
+  }, [])
 
   // Fetch Twitter account
   const fetchTwitterAccount = async () => {
@@ -148,7 +264,7 @@ export default function ProfilePage() {
       console.log("Stored link token:", token)
 
       // Redirect to Twitter OAuth (without query parameter)
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter?statte=${encodeURIComponent(token)}`
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter?link_token=${encodeURIComponent(token)}`
     } catch (err) {
       console.error("Error:", err)
       toast.error("Failed to start Twitter linking")
@@ -797,9 +913,13 @@ export default function ProfilePage() {
                       <div className="flex-1">
                         <h3 className="font-semibold flex items-center gap-2">
                           Discord
-                          {connections.discord && <Check className="w-4 h-4 text-green-500" />}
+                          {discordAccount && <Check className="w-4 h-4 text-green-500" />}
                         </h3>
-                        <p className="text-xs text-muted-foreground">Coming soon</p>
+                        <p className="text-xs text-muted-foreground">
+                          {discordAccount
+                            ? `${discordAccount.username}${discordAccount.discriminator && discordAccount.discriminator !== '0' ? `#${discordAccount.discriminator}` : ''}`
+                            : "Not connected"}
+                        </p>
                       </div>
                     </div>
 
@@ -807,16 +927,54 @@ export default function ProfilePage() {
                       <GlowLine orientation="horizontal" position="50%" color="purple" />
                     </div>
 
-                    <Button
-                      variant="outline"
-                      className="w-full border-indigo-500/30 hover:bg-indigo-500/10 hover:border-indigo-500/50 hover:text-indigo-500 transition-all"
-                      onClick={() => handleConnect('discord')}
-                      disabled
-                    >
-                      <LinkIcon className="w-4 h-4 mr-2" />
-                      Coming Soon
-                    </Button>
+                    {discordAccount ? (
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/20">
+                          <div className="flex items-center gap-3">
+                            {discordAccount.avatarUrl && (
+                              <img
+                                src={discordAccount.avatarUrl}
+                                alt={discordAccount.username}
+                                className="w-10 h-10 rounded-full"
+                              />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium">{discordAccount.displayName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {discordAccount.username}
+                                {discordAccount.discriminator && discordAccount.discriminator !== '0' &&
+                                  `#${discordAccount.discriminator}`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-red-500/30 text-red-500 hover:bg-red-500/10"
+                          onClick={handleUnlinkDiscord}
+                        >
+                          <Unlink className="w-3 h-3 mr-2" />
+                          Disconnect
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full border-indigo-500/30 hover:bg-indigo-500/10 hover:border-indigo-500/50 hover:text-indigo-500 transition-all"
+                        onClick={handleLinkDiscord}
+                        disabled={isLinkingDiscord}
+                      >
+                        {isLinkingDiscord ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 mr-2" />
+                        )}
+                        {isLinkingDiscord ? "Connecting..." : "Connect Discord"}
+                      </Button>
+                    )}
                   </div>
+                  {discordAccount && <ShineBorder shineColor="#A3E635" borderWidth={3} />}
                 </Card>
               </BlurFade>
             </div>
@@ -926,7 +1084,10 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">Discord</span>
-                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            discordAccount?.username ? "bg-green-500" : "bg-gray-400"
+                          )} />
                         </div>
                       </div>
                     </div>

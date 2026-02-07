@@ -49,8 +49,12 @@ export default function LoginPage() {
         return;
       }
 
+      const { token } = await res.json();
+      // ✅ ONLY HERE
+      localStorage.setItem("auth_token", token);
+
       // ✅ ALSO call Spring Boot directly to set its cookie
-      const resOne = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/login`, {
+      /*const resOne = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -64,7 +68,7 @@ export default function LoginPage() {
 
       const token = await resOne.text();
       // ✅ ONLY HERE
-      localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_token", token);*/
 
 
       const resMe = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {

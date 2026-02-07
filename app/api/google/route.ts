@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        console.log("Attempting Google login request");
         const body = await req.json();
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/google`, {
@@ -24,19 +23,19 @@ export async function POST(req: Request) {
 
         const response = NextResponse.json({
             success: true,
+            accessToken: data.accessToken, // ✅ Return token to store in localStorage
             user: data.user
         });
 
-        console.log("Google login successful, setting cookie", data.accessToken);
-        // ✅ Store JWT securely (same as your login)
+        // ✅ Also set cookie for middleware
         response.cookies.set({
             name: "access_token",
             value: data.accessToken,
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             path: "/",
-            maxAge: 60 * 60 * 24, // 24 hours (or match your existing token expiry)
+            maxAge: 60 * 60 * 24 * 7, // 7 days
         });
 
         return response;

@@ -40,6 +40,12 @@ export default function GoogleLoginButton({
                 return
             }
 
+            // ✅ Store token in localStorage (same as regular login)
+            if (data.accessToken) {
+                localStorage.setItem('auth_token', data.accessToken)
+                console.log('Google auth token stored in localStorage')
+            }
+
             toast.success(mode === 'login' ? 'Login successful!' : 'Account created successfully!')
             await checkAuth()
             router.push('/dashboard')

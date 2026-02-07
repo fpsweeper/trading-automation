@@ -1,31 +1,38 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-    // Get the cookie from the request headers
-    const cookieHeader = req.headers.get("cookie") || "";
-    const cookies = Object.fromEntries(
-        cookieHeader
-            .split(";")
-            .map(c => c.trim().split("="))
-            .map(([k, v]) => [k, decodeURIComponent(v)])
-    );
-
-    const accessToken = cookies["access_token"];
-    if (!accessToken) {
-        return NextResponse.json({ isAuthenticated: false, username: "" });
-    }
-
-    let username = "";
     try {
+        // Get Authorization header (frontend will send Bearer token)
+        const authHeader = req.headers.get("authorization");
+
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({
+                isAuthenticated: false,
+                username: "",
+                email: ""
+            });
+        }
+
+        const token = authHeader.substring(7); // Remove "Bearer " prefix
+
         // Decode JWT payload
         const payload = JSON.parse(
-            Buffer.from(accessToken.split(".")[1], "base64").toString("utf-8")
+            Buffer.from(token.split(".")[1], "base64").toString("utf-8")
         );
-        username = payload.username || "";
+
+        return NextResponse.json({
+            id: payload.sub || 'unknown',
+            isAuthenticated: true,
+            username: payload.username || "",
+            email: payload.email || "" // JWT usually has email in 'sub' or 'email'
+        });
+
     } catch (err) {
         console.error("Failed to decode JWT:", err);
-        return NextResponse.json({ isAuthenticated: false, username: "" });
+        return NextResponse.json({
+            isAuthenticated: false,
+            username: "",
+            email: ""
+        });
     }
-
-    return NextResponse.json({ isAuthenticated: true, username });
 }

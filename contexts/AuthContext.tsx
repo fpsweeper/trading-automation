@@ -17,10 +17,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuth = async () => {
         try {
-            const res = await fetch('/api/auth')
+            const token = localStorage.getItem('auth_token')
+
+            if (!token) {
+                setIsAuthenticated(false)
+                setUsername('')
+                return
+            }
+
+            // Call API with Authorization header
+            const res = await fetch('/api/auth', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
             const data = await res.json()
             setIsAuthenticated(data.isAuthenticated)
-            setUsername(data.username)
+            console.log('Auth data:', data)
+            setUsername(data.email) // Use email if username not available
+
         } catch (error) {
             console.error('Auth check failed:', error)
             setIsAuthenticated(false)
@@ -34,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 method: 'POST',
                 credentials: 'include',
             })
+            localStorage.removeItem('auth_token')
             setIsAuthenticated(false)
             setUsername('')
         } catch (error) {

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     const token = await res.text();
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, token: token });
 
     // Set cookie for Next.js frontend
     response.cookies.set({
