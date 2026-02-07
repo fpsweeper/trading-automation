@@ -230,7 +230,7 @@ export default function ProfilePage() {
 
   // Link Twitter
   const handleLinkTwitter = async () => {
-    if (!userData?.email) {
+    /*if (!userData?.email) {
       toast.error("User email not found")
       return
     }
@@ -269,7 +269,7 @@ export default function ProfilePage() {
       console.error("Error:", err)
       toast.error("Failed to start Twitter linking")
       setIsLinkingTwitter(false)
-    }
+    }*/
   }
 
   // Unlink Twitter
@@ -339,7 +339,7 @@ export default function ProfilePage() {
     }
   }
 
-  useEffect(() => {
+  /*useEffect(() => {
     const handleTwitterCallback = async () => {
       const params = new URLSearchParams(window.location.search)
       const twitterStatus = params.get('twitter')
@@ -389,7 +389,7 @@ export default function ProfilePage() {
     }
 
     handleTwitterCallback()
-  }, [])
+  }, [])*/
 
   // Fetch user data
   useEffect(() => {
