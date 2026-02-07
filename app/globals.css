@@ -11,6 +11,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Solana Wallet Adapter Styles */
+.wallet-adapter-button-wrapper {
+  width: 100%;
+}
+
+.wallet-adapter-button {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.wallet-adapter-button-trigger {
+  background: linear-gradient(to right, oklch(0.55 0.15 195), oklch(0.85 0.22 130)) !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  z-index: 100 !important;
+}
+
 :root {
   /* Light Mode - Clean and Professional */
   --background: oklch(0.99 0.005 240);
@@ -118,7 +136,6 @@ button {
 button:hover {
   color: var(--button-hover-text);
 }
-
 
 @theme inline {
   --font-sans: var(--font-lato);
@@ -252,6 +269,36 @@ button:hover {
     50%,
     100% {
       opacity: 0;
+    }
+  }
+
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+
+    15%,
+    35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+
+    65%,
+    85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+
+    100% {
+      transform: translateZ(0) rotate(360deg);
     }
   }
 }

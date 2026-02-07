@@ -7,7 +7,7 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adap
 import { clusterApiUrl } from "@solana/web3.js"
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
-  const network = "devnet"
+  const network = "mainnet-beta"
   const endpoint = clusterApiUrl(network)
 
   const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()]

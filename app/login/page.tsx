@@ -35,6 +35,7 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
     try {
+      // Call Next.js API route (sets Next.js cookie)
       let res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,6 +47,14 @@ export default function LoginPage() {
         toast.error(error || "Login failed");
         return;
       }
+
+      // ✅ ALSO call Spring Boot directly to set its cookie
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include", // Important!
+      });
 
       const resMe = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
         method: "GET",
@@ -60,7 +69,6 @@ export default function LoginPage() {
         const data = await resMe.json();
         console.log("User data:", data);
       }
-
 
       toast.success("Login successful!");
       await checkAuth()

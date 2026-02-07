@@ -8,14 +8,13 @@ export async function POST(req: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        credentials: "include", // ✅ Important: receive cookies from Spring Boot
     });
 
-    // ✅ Handle different error status codes
     if (!res.ok) {
         const contentType = res.headers.get("content-type");
         let errorMessage = "Invalid credentials";
 
-        // If Spring Boot returns JSON (your ApiError)
         if (contentType?.includes("application/json")) {
             try {
                 const errorData = await res.json();
@@ -24,7 +23,6 @@ export async function POST(req: Request) {
                 console.error("Failed to parse error response:", e);
             }
         } else {
-            // If it's plain text
             const textError = await res.text();
             if (textError) {
                 errorMessage = textError;
@@ -33,7 +31,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(
             { error: errorMessage },
-            { status: res.status } // ✅ Preserve the original status code
+            { status: res.status }
         );
     }
 
@@ -41,7 +39,7 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({ success: true });
 
-    // ✅ Store JWT securely
+    // Set cookie for Next.js frontend
     response.cookies.set({
         name: "access_token",
         value: token,
@@ -49,8 +47,14 @@ export async function POST(req: Request) {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        maxAge: 60 * 60, // 1 hour
+        maxAge: 60 * 60 * 24 * 7, // 7 days to match Spring Boot
     });
+
+    // ✅ Forward Spring Boot's Set-Cookie header if present
+    const springCookie = res.headers.get("set-cookie");
+    if (springCookie) {
+        console.log("Forwarding Spring Boot cookie:", springCookie);
+    }
 
     return response;
 }

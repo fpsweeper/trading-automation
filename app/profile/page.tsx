@@ -2,552 +2,887 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import {
-  LogOut,
-  User,
+  Mail,
+  KeyRound,
   Wallet,
-  WalletCards,
-  CheckCircle,
-  AlertCircle,
-  Copy,
-  ArrowUpRight,
-  Settings,
+  Twitter,
+  MessageSquare,
+  Check,
+  ExternalLink,
+  Shield,
+  Sparkles,
+  ChevronRight,
   Link as LinkIcon,
   Unlink,
+  AlertCircle,
+  Loader2
 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { ShineBorder } from "@/components/ui/shine-border"
+import GlowLine from "@/components/ui/glowline"
+import { ShimmerButton } from "@/components/ui/shimmer-button"
+import { BlurFade } from "@/components/ui/blur-fade"
+import { toast } from "sonner"
+import { useWallet } from '@solana/wallet-adapter-react'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { useAuth } from "@/contexts/AuthContext"
+
+interface SolanaWalletData {
+  walletAddress: string
+  isVerified: boolean
+  linkedAt: string
+  nickname?: string
+  isPrimary: boolean
+}
+
+interface UserData {
+  email: string
+  username: string
+  firstName: string
+  lastName: string
+  authProvider: string
+  isGoogleAccount: boolean
+}
 
 export default function ProfilePage() {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [username, setUsername] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [topupAmount, setTopupAmount] = useState("")
-  const [showTopupSuccess, setShowTopupSuccess] = useState(false)
-  const [linkedAccounts, setLinkedAccounts] = useState({
+
+  const { isAuthenticated } = useAuth()
+  const { publicKey, connected, disconnect, signMessage } = useWallet()
+  const [isVerifying, setIsVerifying] = useState(false)
+
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [solanaWallet, setSolanaWallet] = useState<SolanaWalletData | null>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
+  const [isLoadingWallet, setIsLoadingWallet] = useState(true)
+  const [isLinking, setIsLinking] = useState(false)
+  const [isUnlinking, setIsUnlinking] = useState(false)
+
+  const [connections, setConnections] = useState({
     solana: false,
     twitter: false,
     discord: false,
   })
 
+  /////////////////////////////////////////////////////////////////
+  const [twitterAccount, setTwitterAccount] = useState<{
+    twitterId: string
+    username: string
+    displayName: string
+    profileImageUrl: string
+    linkedAt: string
+  } | null>(null)
+  const [isLinkingTwitter, setIsLinkingTwitter] = useState(false)
+
+  // Add to useEffect
   useEffect(() => {
-    // Check if user is logged in
-    /*const auth = localStorage.getItem("harvest3_auth")
-    if (!auth) {
-      router.push("/login")
+    if (isAuthenticated) {
+      fetchUserData()
+      fetchSolanaWallet()
+      fetchTwitterAccount()
+    }
+  }, [isAuthenticated])
+
+  // Fetch Twitter account
+  const fetchTwitterAccount = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTwitterAccount(data)
+        setConnections(prev => ({ ...prev, twitter: true }))
+      } else if (response.status === 404) {
+        setTwitterAccount(null)
+        setConnections(prev => ({ ...prev, twitter: false }))
+      }
+    } catch (error) {
+      console.error("Error fetching Twitter account:", error)
+    }
+  }
+
+  // Link Twitter
+  const handleLinkTwitter = async () => {
+    if (!userData?.email) {
+      toast.error("User email not found")
       return
     }
 
-    const authData = JSON.parse(auth)
-    setUsername(authData.username)*/
-    setIsAuthenticated(true)
-    setLoading(false)
-  }, [router])
+    setIsLinkingTwitter(true)
 
-  const handleLogout = () => {
-    localStorage.removeItem("harvest3_auth")
-    router.push("/login")
+    // Store user email in localStorage temporarily
+    localStorage.setItem('twitter_linking_user', userData.email)
+
+    // Redirect to Twitter OAuth
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}oauth2/authorization/twitter`
   }
 
-  const handleTopup = () => {
-    if (topupAmount && parseFloat(topupAmount) > 0) {
-      setShowTopupSuccess(true)
-      setTopupAmount("")
-      setTimeout(() => setShowTopupSuccess(false), 3000)
+  // Unlink Twitter
+  const handleUnlinkTwitter = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/social/twitter/unlink`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        toast.error(data.message || "Failed to unlink Twitter")
+        return
+      }
+
+      setTwitterAccount(null)
+      setConnections(prev => ({ ...prev, twitter: false }))
+      toast.success("Twitter account unlinked successfully!")
+    } catch (error) {
+      console.error("Error unlinking Twitter:", error)
+      toast.error("Failed to unlink Twitter")
+    }
+  }
+  /////////////////////////////////////////////////////////////////
+
+  const handleVerifyWallet = async () => {
+    if (!connected) {
+      toast.info("Please connect your wallet first")
+      return
+    }
+    if (!publicKey || !solanaWallet) return
+
+    if (!signMessage) {
+      toast.error("Your wallet does not support message signing. Please use Phantom or Solflare.")
+      return
+    }
+    try {
+
+      setIsVerifying(true)
+
+      // just trigger wallet popup
+      const message = new TextEncoder().encode("Verify wallet ownership on HARVEST 3")
+      await signMessage(message)
+
+      // backend trust after signing
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/verify?walletAddress=${solanaWallet.walletAddress}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      )
+
+      // refresh wallet data
+      fetchSolanaWallet()
+
+    } finally {
+      setIsVerifying(false)
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  useEffect(() => {
+    // Check for Twitter OAuth callback
+    const params = new URLSearchParams(window.location.search)
+    const twitterStatus = params.get('twitter')
+
+    if (twitterStatus === 'success') {
+      toast.success("Twitter account linked successfully!")
+      // Remove temporary storage
+      localStorage.removeItem('twitter_linking_user')
+      // Remove query params from URL
+      window.history.replaceState({}, '', '/profile')
+      // Refresh Twitter account data
+      fetchTwitterAccount()
+    } else if (twitterStatus === 'error') {
+      const message = params.get('message') || 'Failed to link Twitter account'
+      toast.error(message)
+      localStorage.removeItem('twitter_linking_user')
+      window.history.replaceState({}, '', '/profile')
+    }
+  }, [])
+
+  // Fetch user data
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserData()
+      fetchSolanaWallet()
+
+    }
+  }, [isAuthenticated])
+
+  // Handle wallet connection
+  useEffect(() => {
+    if (connected && publicKey && !solanaWallet && !isLinking && isAuthenticated) {
+      handleLinkWallet()
+    }
+  }, [connected, publicKey, solanaWallet, isAuthenticated])
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Fetched user data:", data)
+        setUserData({
+          email: data.email,
+          username: "None",
+          firstName: "None",
+          lastName: "None",
+          authProvider: data.authProvider || 'LOCAL',
+          isGoogleAccount: data.authProvider === 'GOOGLE',
+        })
+      } else {
+        toast.error("Failed to load user data")
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+      toast.error("Error loading user data")
+    } finally {
+      setIsLoadingUser(false)
+    }
   }
 
-  const handleLinkAccount = (service: "solana" | "twitter" | "discord") => {
-    setLinkedAccounts((prev) => ({
-      ...prev,
-      [service]: !prev[service],
-    }))
+  const fetchSolanaWallet = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/getWallet`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSolanaWallet(data)
+        setConnections(prev => ({ ...prev, solana: true }))
+      } else if (response.status === 404) {
+        // No wallet linked
+        console.log("No Solana wallet linked")
+        setSolanaWallet(null)
+        setConnections(prev => ({ ...prev, solana: false }))
+      }
+    } catch (error) {
+      console.error("Error fetching Solana wallet:", error)
+    } finally {
+      setIsLoadingWallet(false)
+    }
   }
 
-  if (loading) {
+  const handleLinkWallet = async () => {
+    if (!publicKey) {
+      toast.error("Please connect your wallet first")
+      return
+    }
+
+    setIsLinking(true)
+
+    try {
+      const walletAddress = publicKey.toBase58()
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/link`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: walletAddress,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.message || "Failed to link wallet")
+        await disconnect()
+        return
+      }
+
+      setSolanaWallet(data)
+      setConnections(prev => ({ ...prev, solana: true }))
+      toast.success("Solana wallet linked successfully!")
+    } catch (error: any) {
+      console.error("Error linking wallet:", error)
+      toast.error(error.message || "Failed to link wallet")
+      await disconnect()
+    } finally {
+      setIsLinking(false)
+    }
+  }
+
+  const handleUnlinkWallet = async () => {
+    setIsUnlinking(true)
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/wallet/solana/unlink`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        toast.error(data.message || "Failed to unlink wallet")
+        return
+      }
+
+      // Disconnect wallet from UI
+      await disconnect()
+
+      setSolanaWallet(null)
+      setConnections(prev => ({ ...prev, solana: false }))
+      toast.success("Wallet unlinked successfully!")
+    } catch (error) {
+      console.error("Error unlinking wallet:", error)
+      toast.error("Failed to unlink wallet")
+    } finally {
+      setIsUnlinking(false)
+    }
+  }
+
+  const handleConnect = (service: 'twitter' | 'discord') => {
+    // Placeholder for Twitter/Discord OAuth
+    toast.info(`${service} integration coming soon!`)
+  }
+
+  if (isLoadingUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    return null
-  }
-
-  // Mock user and wallet data
-  const userData = {
-    email: "admin@gmail.com",
-    username: username,
-    joinDate: "January 15, 2024",
-    totalTrades: 245,
-    winRate: 68.5,
-  }
-
-  const walletData = {
-    address: "5eMt8aP2bVxS8gKxMjVqZhPzNwzR7LkMpQ8vTx9nRz3m",
-    balance: 12450.75,
-    status: "active",
-    createdAt: "January 20, 2024",
-  }
-
-  const accountStatus = {
-    emailVerified: true,
-    twoFAEnabled: false,
-    apiKeysActive: 2,
-    lastLogin: "Today at 2:34 PM",
+  if (!userData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Failed to load user data</p>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      {/*<header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">H3</span>
-            </div>
-            <span className="font-bold">Harvest 3</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-border bg-transparent"
-              onClick={() => router.push("/dashboard")}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-border text-destructive hover:bg-destructive/10 bg-transparent"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>*/}
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">User Profile</h1>
-          <p className="text-muted-foreground">Manage your account, wallet, and security settings</p>
-        </div>
-
-        {/* User Info Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Left Column - User Info and Account Status */}
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-6xl">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* User Information */}
-            <Card className="p-6 border border-border">
-              <div className="flex items-center gap-3 mb-6">
-                <User className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">User Information</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Username</p>
-                    <p className="text-lg font-medium text-foreground">{userData.username}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Email</p>
-                    <p className="text-lg font-medium text-foreground">{userData.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Member Since</p>
-                    <p className="text-lg font-medium text-foreground">{userData.joinDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Trades</p>
-                    <p className="text-lg font-medium text-foreground">{userData.totalTrades}</p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-muted-foreground">Win Rate</p>
-                    <p className="text-lg font-bold text-green-500">{userData.winRate}%</p>
-                  </div>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${userData.winRate}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Wallet Creation & Status */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Wallet Creation */}
-              <Card className="p-6 border border-border">
-                <div className="flex items-center gap-3 mb-6">
-                  <WalletCards className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-bold">Wallet Creation</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Wallet Address</p>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs bg-secondary/50 px-3 py-2 rounded font-mono text-foreground flex-1 truncate">
-                        {walletData.address}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(walletData.address)}
-                        className="text-primary hover:bg-primary/10"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
+            {/* Email Card */}
+            <BlurFade delay={0.2} inView>
+              <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center">
+                        <Mail className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">Email Address</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {userData.isGoogleAccount ? "Google Account" : "Email & Password"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Created</p>
-                    <p className="text-foreground">{walletData.createdAt}</p>
-                  </div>
-                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                    Generate New Wallet
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Wallet Status */}
-              <Card className="p-6 border border-border">
-                <div className="flex items-center gap-3 mb-6">
-                  <Wallet className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-bold">Wallet Status</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-sm font-medium text-green-600 capitalize">{walletData.status}</span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs font-medium text-green-700 dark:text-green-400">Verified</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Balance</p>
-                    <p className="text-lg font-bold text-foreground">${walletData.balance.toFixed(2)}</p>
-                  </div>
-
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-xs text-muted-foreground mb-2">Last Updated: Just now</p>
-                    <Button variant="outline" className="w-full border-border bg-transparent">
-                      Refresh Balance
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Wallet Top-up */}
-            <Card className="p-6 border border-border">
-              <div className="flex items-center gap-3 mb-6">
-                <ArrowUpRight className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-bold">Wallet Top-up</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Amount (USD)</label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Enter amount"
-                      value={topupAmount}
-                      onChange={(e) => setTopupAmount(e.target.value)}
-                      className="bg-secondary border-border text-foreground"
+                  <div className="relative w-full mb-6 py-1">
+                    <GlowLine
+                      orientation="horizontal"
+                      position="50%"
+                      color="lightgreen"
                     />
-                    <Button
-                      onClick={handleTopup}
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      Top-up
-                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="flex-1">
+                        <p className="text-base font-medium text-foreground">{userData.email}</p>
+                      </div>
+                      {userData.isGoogleAccount && (
+                        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white dark:bg-gray-800 border border-border/50">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                          </svg>
+                          <span className="text-xs font-medium text-foreground">Google</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Authentication Method Info */}
+                    <div className={cn(
+                      "p-4 rounded-xl border",
+                      userData.isGoogleAccount ? "bg-blue-500/5 border-blue-500/20" : "bg-primary/5 border-primary/20"
+                    )}>
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                          userData.isGoogleAccount ? "bg-blue-500/10" : "bg-primary/10"
+                        )}>
+                          {userData.isGoogleAccount ? (
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                            </svg>
+                          ) : (
+                            <KeyRound className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground mb-1">
+                            {userData.isGoogleAccount ? "Google Sign-In" : "Email & Password"}
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {userData.isGoogleAccount
+                              ? "You sign in using your Google account. No password required."
+                              : "You sign in with your email and password. You can change your password anytime."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+                <ShineBorder shineColor="#A3E635" borderWidth={3} />
+              </Card>
+            </BlurFade>
 
-                {showTopupSuccess && (
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <p className="text-sm text-green-700">Top-up request submitted successfully!</p>
+            {/* Solana Wallet Connection */}
+            <BlurFade delay={0.3} inView>
+              <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm group hover:border-primary/30 transition-all duration-300">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Wallet className="w-6 h-6 text-purple-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          Solana Wallet
+                          {solanaWallet && solanaWallet.isVerified && (
+                            <Check className="w-4 h-4 text-green-500" />
+                          )}
+                          {solanaWallet && !solanaWallet.isVerified && (
+                            <Check className="w-4 h-4 text-orange-500" />
+                          )}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {isLoadingWallet ? "Loading..." : solanaWallet ? "Linked & " : "Link your Solana wallet"}
+                          {!isLoadingWallet && solanaWallet && solanaWallet.isVerified && "Verified on " + new Date(solanaWallet.linkedAt).toLocaleDateString()}
+                          {!isLoadingWallet && solanaWallet && !solanaWallet.isVerified && "Unverified"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
-                  <p className="text-xs text-muted-foreground font-medium">Quick Add</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[100, 500, 1000, 5000].map((amount) => (
+                  <div className="relative w-full mb-6 py-1">
+                    <GlowLine orientation="horizontal" position="50%" color="lightgreen" />
+                  </div>
+
+                  {isLoadingWallet ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  ) : solanaWallet ? (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/20">
+                        <p className="text-xs text-muted-foreground mb-1">Wallet Address</p>
+                        <div className="flex items-center gap-2 flex-wrap justify-between">
+                          <div className="flex items-center gap-2 flex-wrap"><code className="text-sm font-mono text-foreground break-all">
+                            {solanaWallet.walletAddress}
+                          </code>
+                            <ExternalLink
+                              className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors flex-shrink-0"
+                              onClick={() => window.open(`https://solscan.io/account/${solanaWallet.walletAddress}`, '_blank')}
+                            /></div>
+
+                          {!connected ? (
+                            <WalletMultiButton className="!w-full !justify-center" />
+                          ) : (
+                            !solanaWallet.isVerified ? (<Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-3 border-green-500/30 text-green-600 hover:bg-green-500/10"
+                              onClick={handleVerifyWallet}
+                              disabled={isVerifying}
+                            >
+                              {isVerifying ? (
+                                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                              ) : (
+                                <Check className="w-3 h-3 mr-2" />
+                              )}
+                              {isVerifying ? "Verifying..." : "Verify Wallet"}
+                            </Button>) : (<div className="flex items-center gap-2 mt-2">
+                              <Check className="w-3 h-3 text-green-500" />
+                              <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
+                            </div>)
+
+                          )}
+                        </div>
+
+                        {/*solanaWallet.isVerified ? (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Check className="w-3 h-3 text-green-500" />
+                            <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
+                          </div>
+                        ) : (
+                          <div>
+                            !connected ? (
+                              <WalletMultiButton className="!w-full !justify-center" />
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-3 border-green-500/30 text-green-600 hover:bg-green-500/10"
+                                onClick={handleVerifyWallet}
+                                disabled={isVerifying}
+                              >
+                                {isVerifying ? (
+                                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                ) : (
+                                  <Check className="w-3 h-3 mr-2" />
+                                )}
+                                {isVerifying ? "Verifying..." : "Verify Wallet"}
+                              </Button>
+                            )
+                          </div>
+
+                        )*/}
+
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50"
+                          onClick={handleUnlinkWallet}
+                          disabled={isUnlinking}
+                        >
+                          {isUnlinking ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Unlink className="w-4 h-4 mr-2" />
+                          )}
+                          {isUnlinking ? "Disconnecting..." : "Disconnect"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="border-border/50 hover:bg-muted/50"
+                          onClick={() => window.open(`https://solscan.io/account/${solanaWallet.walletAddress}`, '_blank')}
+                        >
+                          View on Solscan
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                        <p className="text-sm text-muted-foreground text-center">
+                          Connect your Solana wallet to enable trading and access DeFi features
+                          <div className="wallet-adapter-button-wrapper">
+                            <WalletMultiButton className="!bg-gradient-to-r !from-primary !to-accent hover:!from-primary/90 hover:!to-accent/90 !text-white !shadow-lg !shadow-primary/25 hover:!shadow-xl hover:!shadow-primary/40 !transition-all !duration-300 !w-full !justify-center" />
+                          </div>
+                        </p>
+                      </div>
+
+                      {!connected ? (
+                        <>
+                        </>
+                      ) : (
+                        <ShimmerButton
+                          className="w-full shadow-2xl"
+                          onClick={handleLinkWallet}
+                          disabled={isLinking}
+                        >
+                          {isLinking ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              <span>Linking...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Wallet className="w-4 h-4 mr-2" />
+                              <span>Link Wallet to Account</span>
+                            </>
+                          )}
+                        </ShimmerButton>
+                      )}
+
+                      <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-muted-foreground">
+                            We support Phantom, Solflare, and other popular Solana wallets
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {solanaWallet && <ShineBorder shineColor="#A3E635" borderWidth={3} />}
+              </Card>
+            </BlurFade>
+
+            {/* Social Connections Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Twitter Connection */}
+              <BlurFade delay={0.4} inView>
+                <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm group hover:border-blue-500/30 transition-all duration-300">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Twitter className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          X (Twitter)
+                          {twitterAccount && <Check className="w-4 h-4 text-green-500" />}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {twitterAccount ? `@${twitterAccount.username}` : "Not connected"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="relative w-full mb-6 py-1">
+                      <GlowLine orientation="horizontal" position="50%" color="blue" />
+                    </div>
+
+                    {twitterAccount ? (
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                          <div className="flex items-center gap-3">
+                            {twitterAccount.profileImageUrl && (
+                              <img
+                                src={twitterAccount.profileImageUrl}
+                                alt={twitterAccount.username}
+                                className="w-10 h-10 rounded-full"
+                              />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium">{twitterAccount.displayName}</p>
+                              <p className="text-xs text-muted-foreground">@{twitterAccount.username}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-red-500/30 text-red-500 hover:bg-red-500/10"
+                          onClick={handleUnlinkTwitter}
+                        >
+                          <Unlink className="w-3 h-3 mr-2" />
+                          Disconnect
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
-                        key={amount}
                         variant="outline"
-                        className="border-border bg-background hover:bg-primary/10 text-foreground"
-                        onClick={() => setTopupAmount(amount.toString())}
+                        className="w-full border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 hover:text-blue-500 transition-all"
+                        onClick={handleLinkTwitter}
+                        disabled={isLinkingTwitter}
                       >
-                        ${amount}
+                        {isLinkingTwitter ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 mr-2" />
+                        )}
+                        {isLinkingTwitter ? "Connecting..." : "Connect X"}
                       </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Social & Wallet Linking */}
-            <Card className="p-6 border border-border">
-              <div className="flex items-center gap-3 mb-6">
-                <LinkIcon className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-bold">Connected Accounts</h3>
-              </div>
-
-              <div className="space-y-3">
-                {/* Solana Wallet Linking */}
-                <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-900/30 flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-purple-400"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M19.573 3.651A1.734 1.734 0 0 0 17.998 3H6.002a1.734 1.734 0 0 0-1.575.651l5.785 5.785 5.785-5.785zm-16.146.651A1.734 1.734 0 0 0 2.427 3.651l5.785 5.785-5.785 5.785a1.734 1.734 0 0 0 1.575 2.785h11.996a1.734 1.734 0 0 0 1.575-2.785l-5.785-5.785 5.785-5.785z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Solana Wallet</p>
-                      <p className="text-xs text-muted-foreground">
-                        {linkedAccounts.solana ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${linkedAccounts.solana
-                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                      } bg-transparent`}
-                    onClick={() => handleLinkAccount("solana")}
-                  >
-                    {linkedAccounts.solana ? (
-                      <>
-                        <Unlink className="w-4 h-4 mr-2" />
-                        Disconnect
-                      </>
-                    ) : (
-                      <>
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Connect
-                      </>
                     )}
-                  </Button>
-                </div>
-
-                {/* Twitter Linking */}
-                <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-900/30 flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-blue-400"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75 2.25 9-7 9-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">X (Twitter)</p>
-                      <p className="text-xs text-muted-foreground">
-                        {linkedAccounts.twitter ? "@harvest_trading" : "Not connected"}
-                      </p>
-                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${linkedAccounts.twitter
-                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                      } bg-transparent`}
-                    onClick={() => handleLinkAccount("twitter")}
-                  >
-                    {linkedAccounts.twitter ? (
-                      <>
-                        <Unlink className="w-4 h-4 mr-2" />
-                        Disconnect
-                      </>
-                    ) : (
-                      <>
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Connect
-                      </>
-                    )}
-                  </Button>
-                </div>
+                  {twitterAccount && <ShineBorder shineColor="#A3E635" borderWidth={3} />}
+                </Card>
+              </BlurFade>
 
-                {/* Discord Linking */}
-                <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-900/30 flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-indigo-400"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M20.317 4.492c-1.53-.742-3.149-1.277-4.884-1.515a.06.06 0 0 0-.063.03c-.211.38-.445.88-.607 1.27a18.27 18.27 0 0 0-5.487 0c-.165-.39-.395-.89-.607-1.27a.064.064 0 0 0-.064-.03c-1.735.238-3.354.773-4.883 1.515a.062.062 0 0 0-.031.021C1.47 8.72.73 12.82 1.613 16.77c.057.098.12.19.184.277a.06.06 0 0 0 .052.027c1.63.476 3.21.922 4.76 1.247a.064.064 0 0 0 .069-.022c.461-.597.873-1.23 1.225-1.896a.06.06 0 0 0-.033-.084 12.471 12.471 0 0 1-1.738-.848.061.061 0 0 1-.006-.1l.437-.33a.06.06 0 0 1 .063-.007c3.644 1.713 7.59 1.713 11.185 0a.06.06 0 0 1 .063.007l.437.33a.061.061 0 0 1-.006.1 11.71 11.71 0 0 1-1.738.847.06.06 0 0 0-.034.085c.36.665.773 1.298 1.225 1.895a.06.06 0 0 0 .07.021c1.55-.324 3.13-.77 4.76-1.247a.06.06 0 0 0 .053-.027c1.016-3.687 1.614-7.776-.74-11.597a.052.052 0 0 0-.031-.021zM8.02 13.231c-1.048 0-1.910-.962-1.910-2.139 0-1.177.851-2.139 1.91-2.139 1.065 0 1.93.962 1.91 2.139 0 1.177-.851 2.139-1.91 2.139zm7.975 0c-1.049 0-1.910-.962-1.910-2.139 0-1.177.851-2.139 1.91-2.139 1.065 0 1.93.962 1.91 2.139-.02 1.177-.851 2.139-1.91 2.139z" />
-                      </svg>
+              {/* Discord Connection */}
+              <BlurFade delay={0.5} inView>
+                <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm group hover:border-indigo-500/30 transition-all duration-300">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <MessageSquare className="w-5 h-5 text-indigo-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          Discord
+                          {connections.discord && <Check className="w-4 h-4 text-green-500" />}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">Coming soon</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">Discord</p>
-                      <p className="text-xs text-muted-foreground">
-                        {linkedAccounts.discord ? "harvest3_bot" : "Not connected"}
-                      </p>
+
+                    <div className="relative w-full mb-6 py-1">
+                      <GlowLine orientation="horizontal" position="50%" color="purple" />
                     </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full border-indigo-500/30 hover:bg-indigo-500/10 hover:border-indigo-500/50 hover:text-indigo-500 transition-all"
+                      onClick={() => handleConnect('discord')}
+                      disabled
+                    >
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Coming Soon
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${linkedAccounts.discord
-                      ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
-                      : "border-green-500/30 text-green-500 hover:bg-green-500/10"
-                      } bg-transparent`}
-                    onClick={() => handleLinkAccount("discord")}
-                  >
-                    {linkedAccounts.discord ? (
-                      <>
-                        <Unlink className="w-4 h-4 mr-2" />
-                        Disconnect
-                      </>
-                    ) : (
-                      <>
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Connect
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                <p className="text-xs text-blue-700">
-                  Connected accounts allow you to authenticate using OAuth providers and link your trading notifications to social platforms.
-                </p>
-              </div>
-            </Card>
+                </Card>
+              </BlurFade>
+            </div>
           </div>
 
-          {/* Right Column - Account Status */}
-          <div>
-            <Card className="p-6 border border-border sticky top-24">
-              <div className="flex items-center gap-3 mb-6">
-                <AlertCircle className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-bold">Account Status</h3>
-              </div>
+          {/* Right Column - Security & Actions */}
+          <div className="space-y-6">
+            {/* Security Card */}
+            <BlurFade delay={0.6} inView>
+              <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm sticky top-24">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/10 to-orange-500/10 flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Security</h3>
+                      <p className="text-xs text-muted-foreground">Account protection</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-4">
-                {/* Email Verification */}
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    {accountStatus.emailVerified ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                  <div className="relative w-full mb-6 py-1">
+                    <GlowLine orientation="horizontal" position="50%" color="lightgreen" />
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Password - Only for non-Google accounts */}
+                    {!userData.isGoogleAccount && (
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/30 transition-all group">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <KeyRound className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Password</p>
+                              <p className="text-xs text-muted-foreground">Manage your password</p>
+                            </div>
+                          </div>
+                        </div>
+                        <Link href="/change-password">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary group-hover:shadow-md transition-all"
+                          >
+                            Change Password
+                            <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
+                          </Button>
+                        </Link>
+                      </div>
                     )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground text-sm">Email Verified</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {accountStatus.emailVerified ? "Your email is verified" : "Verify your email"}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="border-t border-border" />
-
-                {/* Two-Factor Authentication */}
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    {accountStatus.twoFAEnabled ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    {/* Google Account Notice */}
+                    {userData.isGoogleAccount && (
+                      <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-1">Google Account</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              You're signed in with Google. Password management is handled by your Google account.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
+
+                    {/*<div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                          <Shield className="w-4 h-4 text-yellow-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Two-Factor Auth</p>
+                          <p className="text-xs text-muted-foreground">Not enabled</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-yellow-500/30 hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:text-yellow-700 dark:hover:text-yellow-500"
+                        disabled
+                      >
+                        Coming Soon
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      </Button>
+                    </div>*/}
+
+                    {/* Connection Status */}
+                    <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                      <p className="text-xs font-medium text-muted-foreground mb-3">Connected Services</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Solana</span>
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            solanaWallet ? (solanaWallet.isVerified ? "bg-green-500" : "bg-orange-500") : "bg-gray-400"
+                          )} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Twitter</span>
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            twitterAccount?.username ? "bg-green-500" : "bg-gray-400"
+                          )} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Discord</span>
+                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground text-sm">Two-Factor Auth</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {accountStatus.twoFAEnabled ? "2FA is enabled" : "Enable 2FA for security"}
+                </div>
+                <ShineBorder shineColor="#A3E635" borderWidth={3} />
+              </Card>
+            </BlurFade>
+
+            {/* Quick Info */}
+            <BlurFade delay={0.7} inView>
+              <Card className="p-6 border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground mb-1">Pro Tip</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Connect your Solana wallet to unlock premium trading features and automated DeFi strategies.
                     </p>
                   </div>
                 </div>
-
-                <div className="border-t border-border" />
-
-                {/* API Keys */}
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground text-sm">API Keys</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {accountStatus.apiKeysActive} active key(s)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t border-border" />
-
-                {/* Last Login */}
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground text-sm">Last Login</p>
-                    <p className="text-xs text-muted-foreground mt-1">{accountStatus.lastLogin}</p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border space-y-2">
-                  <Link href="/preferences" className="block">
-                    <Button variant="outline" className="w-full border-border bg-transparent">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Preferences
-                    </Button>
-                  </Link>
-                  <Link href="/change-password" className="block">
-                    <Button variant="outline" className="w-full border-border bg-transparent">
-                      Change Password
-                    </Button>
-                  </Link>
-                  <Button variant="outline" className="w-full border-border bg-transparent">
-                    Security Settings
-                  </Button>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </BlurFade>
           </div>
         </div>
       </main>
