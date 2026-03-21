@@ -65,7 +65,7 @@ interface ConditionForm {
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const API = process.env.NEXT_PUBLIC_API_URL
-const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
+const TIMEFRAMES = ["5m", "15m", "30m", "1h", "4h", "1d"]
 const INDICATORS = ["RSI_14", "RSI_7", "MACD", "MACD_HISTOGRAM", "MA_20", "MA_50", "MA_200", "EMA_12", "BB_UPPER", "BB_LOWER", "CLOSE_PRICE"]
 const OPERATORS = [
   { value: ">", label: ">" }, { value: "<", label: "<" },
@@ -534,6 +534,7 @@ export default function BotDetailPage() {
   const [snapshots, setSnapshots] = useState<PerformanceSnapshot[]>([])
   const [candles, setCandles] = useState<CandleData[]>([])
   const [candleTimeframe, setCandleTimeframe] = useState("1h")
+  const [conditions, setConditions] = useState<{ entryConditions: ConditionForm[]; exitConditions: ConditionForm[] }>({ entryConditions: [], exitConditions: [] })
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showEdit, setShowEdit] = useState(false)
@@ -547,12 +548,13 @@ export default function BotDetailPage() {
   const fetchAll = useCallback(async () => {
     if (!botId) return
     try {
-      const [bR, sR, tR, pR, snR] = await Promise.all([
+      const [bR, sR, tR, pR, snR, cR] = await Promise.all([
         fetch(`${API}api/bots/${botId}`, { headers: authHeader() }),
         fetch(`${API}api/bots/${botId}/stats`, { headers: authHeader() }),
         fetch(`${API}api/bots/${botId}/trades?page=${tradePage}&size=15`, { headers: authHeader() }),
         fetch(`${API}api/bots/${botId}/positions/open`, { headers: authHeader() }),
         fetch(`${API}api/bots/${botId}/performance`, { headers: authHeader() }),
+        fetch(`${API}api/bots/${botId}/conditions`, { headers: authHeader() }),
       ])
       if (bR.status === 401) { router.push("/login"); return }
       if (bR.ok) { const d = await bR.json(); setBot(d.bot) }
@@ -560,6 +562,7 @@ export default function BotDetailPage() {
       if (tR.ok) { const d = await tR.json(); setTrades(d.trades ?? []); setTotalTradePage(d.totalPages ?? 0) }
       if (pR.ok) { const d = await pR.json(); setPositions(d.positions ?? []) }
       if (snR.ok) { const d = await snR.json(); setSnapshots(d.snapshots ?? []) }
+      if (cR.ok) { const d = await cR.json(); setConditions({ entryConditions: d.entryConditions ?? [], exitConditions: d.exitConditions ?? [] }) }
     } catch { toast.error("Failed to load") }
     finally { setLoading(false) }
   }, [botId, router, tradePage])
@@ -602,7 +605,7 @@ export default function BotDetailPage() {
 
   const sc = statusConfig(bot.status)
   const pnlPos = (bot.totalPnl ?? 0) >= 0
-  const TFS = ["1m", "5m", "15m", "1h", "4h", "1d"]
+  const TFS = ["5m", "15m", "1h", "4h", "1d"]
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -736,7 +739,7 @@ export default function BotDetailPage() {
               <h2 className="font-semibold text-sm sm:text-base mb-1">Equity Curve</h2>
               <p className="text-xs text-muted-foreground mb-3">Hourly balance snapshots</p>
               <EquityChart data={snapshots} initialBalance={bot.initialBalance} />
-            </Card>*/}
+            </Card> */}
 
             {/* Stats + Config — stacked on mobile */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -788,98 +791,138 @@ export default function BotDetailPage() {
                   ))}
                 </div>
               </Card>
+
+              {/* Indicator Conditions */}
+              <Card className="p-4 sm:p-6 border border-border lg:col-span-2">
+                <h2 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
+                  <BarChart2 className="w-4 h-4 text-primary" /> Indicator Conditions
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Entry */}
+                  <div>
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">Entry Conditions</p>
+                    {conditions.entryConditions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40 border border-border">Default strategy logic</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {conditions.entryConditions.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-green-500/5 border border-green-500/20 text-xs">
+                            {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
+                            <span className="font-medium text-foreground">{c.indicatorName}</span>
+                            <span className="text-muted-foreground">{c.operator}</span>
+                            <span className="font-mono font-semibold text-green-600">{c.comparisonValue}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Exit */}
+                  <div>
+                    <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">Exit Conditions</p>
+                    {conditions.exitConditions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40 border border-border">SL/TP only</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {conditions.exitConditions.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-xs">
+                            {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
+                            <span className="font-medium text-foreground">{c.indicatorName}</span>
+                            <span className="text-muted-foreground">{c.operator}</span>
+                            <span className="font-mono font-semibold text-red-500">{c.comparisonValue}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
-        )
-        }
+        )}
 
         {/* ── Trades Tab ── */}
-        {
-          activeTab === "trades" && (
-            <TradesTable trades={trades} tradePage={tradePage} totalTradePage={totalTradePage}
-              onPrev={() => setTradePage(p => p - 1)} onNext={() => setTradePage(p => p + 1)} />
-          )
-        }
+        {activeTab === "trades" && (
+          <TradesTable trades={trades} tradePage={tradePage} totalTradePage={totalTradePage}
+            onPrev={() => setTradePage(p => p - 1)} onNext={() => setTradePage(p => p + 1)} />
+        )}
 
         {/* ── Positions Tab ── */}
-        {
-          activeTab === "positions" && (
-            <Card className="border border-border overflow-hidden">
-              {positions.length === 0 ? (
-                <div className="p-12 text-center"><Activity className="w-10 h-10 text-muted-foreground mx-auto mb-3" /><p className="text-muted-foreground">No open positions</p></div>
-              ) : (
-                <>
-                  {/* Mobile positions */}
-                  <div className="block sm:hidden divide-y divide-border">
-                    {positions.map(pos => {
-                      const pp = (pos.unrealizedPnl ?? 0) >= 0
-                      return (
-                        <div key={pos.id} className="p-4 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold">{pos.symbol}</span>
-                            {pos.unrealizedPnl != null && (
-                              <span className={`text-sm font-semibold font-mono ${pp ? "text-green-500" : "text-destructive"}`}>
-                                {pp ? "+" : ""}${fmt(pos.unrealizedPnl)}
-                                {pos.unrealizedPnlPercentage != null && <span className="text-xs ml-1">({pp ? "+" : ""}{fmt(pos.unrealizedPnlPercentage)}%)</span>}
-                              </span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                            <div><span className="block font-mono text-foreground">{fmt(pos.quantity, 6)}</span>Quantity</div>
-                            <div><span className="block font-mono text-foreground">${fmt(pos.entryPrice)}</span>Entry Price</div>
-                            <div><span className="block font-mono text-foreground">{pos.currentPrice ? `$${fmt(pos.currentPrice)}` : "—"}</span>Current Price</div>
-                            <div><span className="block font-mono text-foreground">${fmt(pos.entryValue)}</span>Entry Value</div>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{fmtTime(pos.openedAt)}</p>
+        {activeTab === "positions" && (
+          <Card className="border border-border overflow-hidden">
+            {positions.length === 0 ? (
+              <div className="p-12 text-center"><Activity className="w-10 h-10 text-muted-foreground mx-auto mb-3" /><p className="text-muted-foreground">No open positions</p></div>
+            ) : (
+              <>
+                {/* Mobile positions */}
+                <div className="block sm:hidden divide-y divide-border">
+                  {positions.map(pos => {
+                    const pp = (pos.unrealizedPnl ?? 0) >= 0
+                    return (
+                      <div key={pos.id} className="p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold">{pos.symbol}</span>
+                          {pos.unrealizedPnl != null && (
+                            <span className={`text-sm font-semibold font-mono ${pp ? "text-green-500" : "text-destructive"}`}>
+                              {pp ? "+" : ""}${fmt(pos.unrealizedPnl)}
+                              {pos.unrealizedPnlPercentage != null && <span className="text-xs ml-1">({pp ? "+" : ""}{fmt(pos.unrealizedPnlPercentage)}%)</span>}
+                            </span>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
-                  {/* Desktop positions table */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                          {["Symbol", "Quantity", "Entry Price", "Current Price", "Entry Value", "Current Value", "Unrealized P&L", "Opened"].map(h => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {positions.map(pos => {
-                          const pp = (pos.unrealizedPnl ?? 0) >= 0
-                          return (
-                            <tr key={pos.id} className="border-b border-border hover:bg-muted/20 transition-colors">
-                              <td className="px-4 py-3 font-semibold">{pos.symbol}</td>
-                              <td className="px-4 py-3 text-sm font-mono">{fmt(pos.quantity, 6)}</td>
-                              <td className="px-4 py-3 text-sm font-mono">${fmt(pos.entryPrice)}</td>
-                              <td className="px-4 py-3 text-sm font-mono">{pos.currentPrice != null ? `$${fmt(pos.currentPrice)}` : "—"}</td>
-                              <td className="px-4 py-3 text-sm font-mono">${fmt(pos.entryValue)}</td>
-                              <td className="px-4 py-3 text-sm font-mono">{pos.currentValue != null ? `$${fmt(pos.currentValue)}` : "—"}</td>
-                              <td className="px-4 py-3 text-sm font-mono">
-                                {pos.unrealizedPnl != null ? (
-                                  <span className={pp ? "text-green-500" : "text-destructive"}>
-                                    {pp ? "+" : ""}${fmt(pos.unrealizedPnl)}
-                                    {pos.unrealizedPnlPercentage != null && <span className="text-xs ml-1">({pp ? "+" : ""}{fmt(pos.unrealizedPnlPercentage)}%)</span>}
-                                  </span>
-                                ) : "—"}
-                              </td>
-                              <td className="px-4 py-3 text-xs text-muted-foreground">{fmtTime(pos.openedAt)}</td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-            </Card>
-          )
-        }
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div><span className="block font-mono text-foreground">{fmt(pos.quantity, 6)}</span>Quantity</div>
+                          <div><span className="block font-mono text-foreground">${fmt(pos.entryPrice)}</span>Entry Price</div>
+                          <div><span className="block font-mono text-foreground">{pos.currentPrice ? `$${fmt(pos.currentPrice)}` : "—"}</span>Current Price</div>
+                          <div><span className="block font-mono text-foreground">${fmt(pos.entryValue)}</span>Entry Value</div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{fmtTime(pos.openedAt)}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* Desktop positions table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        {["Symbol", "Quantity", "Entry Price", "Current Price", "Entry Value", "Current Value", "Unrealized P&L", "Opened"].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {positions.map(pos => {
+                        const pp = (pos.unrealizedPnl ?? 0) >= 0
+                        return (
+                          <tr key={pos.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                            <td className="px-4 py-3 font-semibold">{pos.symbol}</td>
+                            <td className="px-4 py-3 text-sm font-mono">{fmt(pos.quantity, 6)}</td>
+                            <td className="px-4 py-3 text-sm font-mono">${fmt(pos.entryPrice)}</td>
+                            <td className="px-4 py-3 text-sm font-mono">{pos.currentPrice != null ? `$${fmt(pos.currentPrice)}` : "—"}</td>
+                            <td className="px-4 py-3 text-sm font-mono">${fmt(pos.entryValue)}</td>
+                            <td className="px-4 py-3 text-sm font-mono">{pos.currentValue != null ? `$${fmt(pos.currentValue)}` : "—"}</td>
+                            <td className="px-4 py-3 text-sm font-mono">
+                              {pos.unrealizedPnl != null ? (
+                                <span className={pp ? "text-green-500" : "text-destructive"}>
+                                  {pp ? "+" : ""}${fmt(pos.unrealizedPnl)}
+                                  {pos.unrealizedPnlPercentage != null && <span className="text-xs ml-1">({pp ? "+" : ""}{fmt(pos.unrealizedPnlPercentage)}%)</span>}
+                                </span>
+                              ) : "—"}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{fmtTime(pos.openedAt)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </Card>
+        )}
 
-      </main >
+      </main>
 
       {showEdit && bot && <EditBotModal bot={bot} onClose={() => setShowEdit(false)} onUpdated={fetchAll} />}
-    </div >
+    </div>
   )
 }
