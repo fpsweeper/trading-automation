@@ -640,10 +640,10 @@ export default function BotsPage() {
       // ✅ Update bot status immediately from response — no race condition
       if (data.bot) {
         setBots(prev => prev.map(b => b.id === id ? { ...b, ...data.bot } : b))
+      } else {
+        // Fallback: refetch if response doesn't include bot object
+        setTimeout(fetchBots, 2000)
       }
-
-      // Refetch after 1s to confirm DB state
-      setTimeout(fetchBots, 1000)
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Action failed")
     } finally { setActionLoading(null) }
