@@ -218,8 +218,8 @@ const OPERATORS = [
 ]
 const STRATEGY_INFO = {
   DCA: { icon: <Coins className="w-5 h-5" />, color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20", desc: "Dollar Cost Averaging — buy at regular intervals based on indicators", cost: "1 pt / trade" },
-  GRID: { icon: <Layers className="w-5 h-5" />, color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20", desc: "Grid Trading — place buy/sell orders at fixed price intervals", cost: "2 pts / trade" },
-  SCALPING: { icon: <Zap className="w-5 h-5" />, color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20", desc: "Scalping — fast in-and-out trades capturing small price moves", cost: "3 pts / trade" },
+  GRID: { icon: <Layers className="w-5 h-5" />, color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20", desc: "Grid Trading — place buy/sell orders at fixed price intervals", cost: "1 pt / trade" },
+  SCALPING: { icon: <Zap className="w-5 h-5" />, color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20", desc: "Scalping — fast in-and-out trades capturing small price moves", cost: "1 pt / trade" },
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
