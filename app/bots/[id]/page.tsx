@@ -685,7 +685,7 @@ export default function BotDetailPage() {
             <p className="text-xl sm:text-2xl font-bold font-mono">${fmt(bot.currentBalance)}</p>
             <p className="text-xs text-muted-foreground mt-1">Init: ${fmt(bot.initialBalance)}</p>
           </Card>
-          {/*<Card className={`p-4 sm:p-5 border ${pnlPos ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"}`}>
+          <Card className={`p-4 sm:p-5 border ${pnlPos ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"}`}>
             <p className="text-xs text-muted-foreground mb-1">Total P&L</p>
             <p className={`text-xl sm:text-2xl font-bold font-mono ${pnlPos ? "text-green-500" : "text-destructive"}`}>{pnlPos ? "+" : ""}${fmt(bot.totalPnl)}</p>
             <p className={`text-xs mt-1 ${pnlPos ? "text-green-600" : "text-destructive"}`}>{pnlPos ? "+" : ""}{fmt(bot.totalPnlPercentage)}%</p>
@@ -694,7 +694,7 @@ export default function BotDetailPage() {
             <p className="text-xs text-muted-foreground mb-1">Win Rate</p>
             <p className="text-xl sm:text-2xl font-bold">{stats?.winRate != null ? `${stats.winRate.toFixed(1)}%` : "—"}</p>
             <p className="text-xs text-muted-foreground mt-1">{stats ? `${stats.winningTrades}W/${stats.losingTrades}L` : "No trades"}</p>
-          </Card>*/}
+          </Card>
           <Card className="p-4 sm:p-5 border border-border">
             <p className="text-xs text-muted-foreground mb-1">Trades</p>
             <p className="text-xl sm:text-2xl font-bold">{bot.totalTrades}</p>
@@ -719,7 +719,7 @@ export default function BotDetailPage() {
           <div className="space-y-4 sm:space-y-6">
 
             {/* Price Chart */}
-            {/*<Card className="p-4 sm:p-6 border border-border">
+            <Card className="p-4 sm:p-6 border border-border">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <h2 className="font-semibold text-sm sm:text-base shrink-0">{bot.tradingPair}</h2>
                 <div className="flex gap-1 overflow-x-auto">
@@ -732,14 +732,14 @@ export default function BotDetailPage() {
                 </div>
               </div>
               <CandlestickChart candles={candles} trades={trades} symbol={bot.tradingPair} />
-            </Card>*/}
+            </Card>
 
             {/* Equity Curve */}
-            {/*<Card className="p-4 sm:p-6 border border-border">
+            <Card className="p-4 sm:p-6 border border-border">
               <h2 className="font-semibold text-sm sm:text-base mb-1">Equity Curve</h2>
               <p className="text-xs text-muted-foreground mb-3">Hourly balance snapshots</p>
               <EquityChart data={snapshots} initialBalance={bot.initialBalance} />
-            </Card> */}
+            </Card>
 
             {/* Stats + Config — stacked on mobile */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
