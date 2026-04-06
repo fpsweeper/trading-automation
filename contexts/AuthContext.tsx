@@ -17,25 +17,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuth = async () => {
         try {
-            const token = localStorage.getItem('auth_token')
+            // ✅ Use the token from localStorage for the Authorization header
+            // but also rely on the httpOnly cookie being present (set by /api/login).
+            // /api/auth should validate whichever is available.
+            const token = typeof window !== 'undefined'
+                ? localStorage.getItem('auth_token')
+                : null
 
-            if (!token) {
+            const headers: Record<string, string> = {}
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
+            const res = await fetch('/api/auth', {
+                headers,
+                credentials: 'include', // ✅ send the httpOnly cookie too
+            })
+
+            if (!res.ok) {
                 setIsAuthenticated(false)
                 setUsername('')
                 return
             }
 
-            // Call API with Authorization header
-            const res = await fetch('/api/auth', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
             const data = await res.json()
-            setIsAuthenticated(data.isAuthenticated)
-            console.log('Auth data:', data)
-            setUsername(data.email) // Use email if username not available
+            setIsAuthenticated(data.isAuthenticated ?? false)
+            setUsername(data.email ?? data.username ?? '')
 
         } catch (error) {
             console.error('Auth check failed:', error)
@@ -46,15 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         try {
+            // ✅ Clear httpOnly cookie server-side
             await fetch('/api/logout', {
                 method: 'POST',
                 credentials: 'include',
             })
+        } catch (error) {
+            console.error('Logout API call failed:', error)
+        } finally {
+            // ✅ Always clear localStorage regardless of API success
             localStorage.removeItem('auth_token')
             setIsAuthenticated(false)
             setUsername('')
-        } catch (error) {
-            console.error('Logout failed:', error)
         }
     }
 
