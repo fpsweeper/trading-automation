@@ -2,29 +2,29 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
     try {
-        // Get Authorization header (frontend will send Bearer token)
         const authHeader = req.headers.get("authorization");
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return NextResponse.json({
                 isAuthenticated: false,
                 username: "",
-                email: ""
+                email: "",
+                role: "USER",
             });
         }
 
-        const token = authHeader.substring(7); // Remove "Bearer " prefix
+        const token = authHeader.substring(7);
 
-        // Decode JWT payload
         const payload = JSON.parse(
             Buffer.from(token.split(".")[1], "base64").toString("utf-8")
         );
 
         return NextResponse.json({
-            id: payload.sub || 'unknown',
+            id: payload.sub || "unknown",
             isAuthenticated: true,
             username: payload.username || "",
-            email: payload.email || "" // JWT usually has email in 'sub' or 'email'
+            email: payload.email || "",
+            role: payload.role || "USER",   // ← new
         });
 
     } catch (err) {
@@ -32,7 +32,8 @@ export async function GET(req: Request) {
         return NextResponse.json({
             isAuthenticated: false,
             username: "",
-            email: ""
+            email: "",
+            role: "USER",
         });
     }
 }

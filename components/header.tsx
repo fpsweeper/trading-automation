@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Moon, Sun, Globe, LogOut, User, Bell, HelpCircle, X, Menu, Check } from "lucide-react"
+import { Moon, Sun, Globe, LogOut, User, Bell, HelpCircle, X, Menu, Check, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
@@ -118,7 +118,7 @@ function NotificationPanel({ notifications, unreadCount, loading, onMarkAllRead,
 }
 
 export default function Header() {
-  const { isAuthenticated, username, logout } = useAuth()
+  const { isAuthenticated, role, username, logout } = useAuth()
   // ✅ Global language context — changing here instantly updates Hero, Features, Footer etc.
   const { language, setLanguage } = useLanguage()
   const router = useRouter()
@@ -298,6 +298,14 @@ export default function Header() {
                         <span className="text-sm font-medium text-foreground">{username}</span>
                       </div>
                     </Link>
+
+                    {isAuthenticated && role === 'ADMIN' && (
+                      <Link href="/admin" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+                        <Shield className="w-4 h-4" />
+                        Admin
+                      </Link>
+                    )}
+
                     <Link href="/dashboard"><Button variant="outline" size="sm">Dashboard</Button></Link>
                     <Link href="/wallet"><Button variant="outline" size="sm">Wallet</Button></Link>
                     <Link href="/bots"><Button variant="outline" size="sm">Bots</Button></Link>

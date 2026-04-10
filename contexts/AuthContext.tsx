@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface AuthContextType {
     isAuthenticated: boolean
     username: string
+    role: string
     checkAuth: () => Promise<void>
     logout: () => Promise<void>
 }
@@ -14,12 +15,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [username, setUsername] = useState('')
+    const [role, setRole] = useState('')
 
     const checkAuth = async () => {
         try {
-            // ✅ Use the token from localStorage for the Authorization header
-            // but also rely on the httpOnly cookie being present (set by /api/login).
-            // /api/auth should validate whichever is available.
             const token = typeof window !== 'undefined'
                 ? localStorage.getItem('auth_token')
                 : null
@@ -29,29 +28,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const res = await fetch('/api/auth', {
                 headers,
-                credentials: 'include', // ✅ send the httpOnly cookie too
+                credentials: 'include',
             })
 
             if (!res.ok) {
                 setIsAuthenticated(false)
                 setUsername('')
+                setRole('')
                 return
             }
 
             const data = await res.json()
             setIsAuthenticated(data.isAuthenticated ?? false)
             setUsername(data.email ?? data.username ?? '')
+            setRole(data.role ?? 'USER')   // ← new
 
         } catch (error) {
             console.error('Auth check failed:', error)
             setIsAuthenticated(false)
             setUsername('')
+            setRole('')
         }
     }
 
     const logout = async () => {
         try {
-            // ✅ Clear httpOnly cookie server-side
             await fetch('/api/logout', {
                 method: 'POST',
                 credentials: 'include',
@@ -59,10 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             console.error('Logout API call failed:', error)
         } finally {
-            // ✅ Always clear localStorage regardless of API success
             localStorage.removeItem('auth_token')
             setIsAuthenticated(false)
             setUsername('')
+            setRole('')                    // ← new
         }
     }
 
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, username, checkAuth, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, username, role, checkAuth, logout }}>
             {children}
         </AuthContext.Provider>
     )
