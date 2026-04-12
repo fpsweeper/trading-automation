@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,7 +31,8 @@ const translations = {
     running: "running", allTime: "All time", currentlyActive: "Currently active",
     filterAll: "All", filterRunning: "Running", filterPaused: "Paused", filterStopped: "Stopped", filterReady: "Ready",
     noBots: "No bots yet", noBotsDesc: "Create your first simulation bot to start trading automatically", createFirstBot: "Create Your First Bot",
-    view: "View", start: "Start", pause: "Pause", stop: "Stop",
+    view: "View", start: "Start", pause: "Pause", stop: "Stop", delete: "Delete",
+    deleteConfirm: "Delete this bot? All trade history will be lost. This cannot be undone.",
     balance: "Balance", pnl: "P&L", trades: "Trades", openPos: "Open Pos.",
     lastRun: "Last run",
     // Create bot modal
@@ -43,6 +45,8 @@ const translations = {
     description: "Description", descPlaceholder: "Optional",
     tradingPair: "Trading Pair", selectPair: "Select pair...", searchPair: "Search pair... e.g. BTC, ETH", noPair: "No pair found.",
     timeframe: "Timeframe", initialBalance: "Initial Balance ($)",
+    simulationMode: "Simulation Mode", liveMode: "Live (Coming Soon)",
+    virtualCreditNote: "Free $1,000 virtual credit — no real money involved",
     riskSettings: "Risk Settings",
     stopLoss: "Stop Loss (%)", takeProfit: "Take Profit (%)", maxPosition: "Max Position Size (%)",
     slTpNote: "Stop loss and take profit are checked on every execution cycle.",
@@ -72,7 +76,8 @@ const translations = {
     running: "en cours", allTime: "Depuis toujours", currentlyActive: "Actuellement actifs",
     filterAll: "Tous", filterRunning: "En cours", filterPaused: "En pause", filterStopped: "Arrêtés", filterReady: "Prêts",
     noBots: "Pas encore de bots", noBotsDesc: "Créez votre premier bot de simulation pour commencer à trader automatiquement", createFirstBot: "Créer mon premier bot",
-    view: "Voir", start: "Démarrer", pause: "Pause", stop: "Arrêter",
+    view: "Voir", start: "Démarrer", pause: "Pause", stop: "Arrêter", delete: "Supprimer",
+    deleteConfirm: "Supprimer ce bot ? Tout l'historique des trades sera perdu. Cette action est irréversible.",
     balance: "Solde", pnl: "P&L", trades: "Trades", openPos: "Pos. ouvertes",
     lastRun: "Dernière exécution",
     createNewBot: "Créer un nouveau bot", chooseTemplate: "Choisir un modèle", stepOf: "Étape",
@@ -84,6 +89,8 @@ const translations = {
     description: "Description", descPlaceholder: "Optionnel",
     tradingPair: "Paire de trading", selectPair: "Sélectionner une paire...", searchPair: "Rechercher... ex. BTC, ETH", noPair: "Aucune paire trouvée.",
     timeframe: "Intervalle de temps", initialBalance: "Solde initial ($)",
+    simulationMode: "Mode Simulation", liveMode: "Live (Bientôt)",
+    virtualCreditNote: "Crédit virtuel gratuit de 1 000 $ — aucun argent réel",
     riskSettings: "Paramètres de risque",
     stopLoss: "Stop Loss (%)", takeProfit: "Take Profit (%)", maxPosition: "Taille max. position (%)",
     slTpNote: "Stop loss et take profit sont vérifiés à chaque cycle d'exécution.",
@@ -111,7 +118,8 @@ const translations = {
     running: "en ejecución", allTime: "Desde siempre", currentlyActive: "Actualmente activos",
     filterAll: "Todos", filterRunning: "En ejecución", filterPaused: "En pausa", filterStopped: "Detenidos", filterReady: "Listos",
     noBots: "Aún no hay bots", noBotsDesc: "Crea tu primer bot de simulación para comenzar a operar automáticamente", createFirstBot: "Crear mi primer bot",
-    view: "Ver", start: "Iniciar", pause: "Pausar", stop: "Detener",
+    view: "Ver", start: "Iniciar", pause: "Pausar", stop: "Detener", delete: "Eliminar",
+    deleteConfirm: "¿Eliminar este bot? Se perderá todo el historial de trades. Esta acción no se puede deshacer.",
     balance: "Saldo", pnl: "P&L", trades: "Trades", openPos: "Pos. abiertas",
     lastRun: "Última ejecución",
     createNewBot: "Crear nuevo bot", chooseTemplate: "Elegir plantilla", stepOf: "Paso",
@@ -123,6 +131,8 @@ const translations = {
     description: "Descripción", descPlaceholder: "Opcional",
     tradingPair: "Par de trading", selectPair: "Seleccionar par...", searchPair: "Buscar... ej. BTC, ETH", noPair: "Par no encontrado.",
     timeframe: "Intervalo de tiempo", initialBalance: "Saldo inicial ($)",
+    simulationMode: "Modo Simulación", liveMode: "Live (Próximamente)",
+    virtualCreditNote: "Crédito virtual gratuito de $1,000 — sin dinero real",
     riskSettings: "Configuración de riesgo",
     stopLoss: "Stop Loss (%)", takeProfit: "Take Profit (%)", maxPosition: "Tamaño máx. posición (%)",
     slTpNote: "Stop loss y take profit se comprueban en cada ciclo de ejecución.",
@@ -150,7 +160,8 @@ const translations = {
     running: "laufend", allTime: "Gesamt", currentlyActive: "Aktuell aktiv",
     filterAll: "Alle", filterRunning: "Laufend", filterPaused: "Pausiert", filterStopped: "Gestoppt", filterReady: "Bereit",
     noBots: "Noch keine Bots", noBotsDesc: "Erstellen Sie Ihren ersten Simulations-Bot, um automatisch zu handeln", createFirstBot: "Ersten Bot erstellen",
-    view: "Ansehen", start: "Starten", pause: "Pausieren", stop: "Stoppen",
+    view: "Ansehen", start: "Starten", pause: "Pausieren", stop: "Stoppen", delete: "Löschen",
+    deleteConfirm: "Diesen Bot löschen? Der gesamte Trade-Verlauf geht verloren. Diese Aktion kann nicht rückgängig gemacht werden.",
     balance: "Guthaben", pnl: "G&V", trades: "Trades", openPos: "Offene Pos.",
     lastRun: "Letzte Ausführung",
     createNewBot: "Neuen Bot erstellen", chooseTemplate: "Vorlage wählen", stepOf: "Schritt",
@@ -162,6 +173,8 @@ const translations = {
     description: "Beschreibung", descPlaceholder: "Optional",
     tradingPair: "Handelspaar", selectPair: "Paar auswählen...", searchPair: "Suchen... z.B. BTC, ETH", noPair: "Kein Paar gefunden.",
     timeframe: "Zeitrahmen", initialBalance: "Startguthaben ($)",
+    simulationMode: "Simulationsmodus", liveMode: "Live (Bald verfügbar)",
+    virtualCreditNote: "Kostenloses virtuelles Guthaben von $1.000 — kein echtes Geld",
     riskSettings: "Risikoeinstellungen",
     stopLoss: "Stop-Loss (%)", takeProfit: "Take-Profit (%)", maxPosition: "Max. Positionsgröße (%)",
     slTpNote: "Stop-Loss und Take-Profit werden bei jedem Ausführungszyklus geprüft.",
@@ -189,7 +202,8 @@ const translations = {
     running: "実行中", allTime: "全期間", currentlyActive: "現在アクティブ",
     filterAll: "すべて", filterRunning: "実行中", filterPaused: "一時停止", filterStopped: "停止済み", filterReady: "準備完了",
     noBots: "ボットがありません", noBotsDesc: "最初のシミュレーションボットを作成して自動取引を始めましょう", createFirstBot: "最初のボットを作成",
-    view: "表示", start: "開始", pause: "一時停止", stop: "停止",
+    view: "表示", start: "開始", pause: "一時停止", stop: "停止", delete: "削除",
+    deleteConfirm: "このボットを削除しますか？すべての取引履歴が失われます。この操作は元に戻せません。",
     balance: "残高", pnl: "損益", trades: "取引", openPos: "未決済",
     lastRun: "最終実行",
     createNewBot: "新しいボットを作成", chooseTemplate: "テンプレートを選択", stepOf: "ステップ",
@@ -201,6 +215,8 @@ const translations = {
     description: "説明", descPlaceholder: "任意",
     tradingPair: "取引ペア", selectPair: "ペアを選択...", searchPair: "検索... 例: BTC, ETH", noPair: "ペアが見つかりません。",
     timeframe: "時間枠", initialBalance: "初期残高 ($)",
+    simulationMode: "シミュレーションモード", liveMode: "ライブ (近日公開)",
+    virtualCreditNote: "無料の仮想クレジット $1,000 — 実際のお金は不要",
     riskSettings: "リスク設定",
     stopLoss: "ストップロス (%)", takeProfit: "テイクプロフィット (%)", maxPosition: "最大ポジションサイズ (%)",
     slTpNote: "ストップロスとテイクプロフィットは実行サイクルごとに確認されます。",
@@ -228,7 +244,8 @@ const translations = {
     running: "em execução", allTime: "Desde sempre", currentlyActive: "Atualmente ativos",
     filterAll: "Todos", filterRunning: "Em execução", filterPaused: "Em pausa", filterStopped: "Parados", filterReady: "Prontos",
     noBots: "Nenhum bot ainda", noBotsDesc: "Crie seu primeiro bot de simulação para começar a operar automaticamente", createFirstBot: "Criar meu primeiro bot",
-    view: "Ver", start: "Iniciar", pause: "Pausar", stop: "Parar",
+    view: "Ver", start: "Iniciar", pause: "Pausar", stop: "Parar", delete: "Excluir",
+    deleteConfirm: "Excluir este bot? Todo o histórico de trades será perdido. Esta ação não pode ser desfeita.",
     balance: "Saldo", pnl: "L&P", trades: "Trades", openPos: "Pos. abertas",
     lastRun: "Última execução",
     createNewBot: "Criar novo bot", chooseTemplate: "Escolher modelo", stepOf: "Passo",
@@ -240,6 +257,8 @@ const translations = {
     description: "Descrição", descPlaceholder: "Opcional",
     tradingPair: "Par de trading", selectPair: "Selecionar par...", searchPair: "Buscar... ex. BTC, ETH", noPair: "Par não encontrado.",
     timeframe: "Intervalo de tempo", initialBalance: "Saldo inicial ($)",
+    simulationMode: "Modo Simulação", liveMode: "Live (Em breve)",
+    virtualCreditNote: "Crédito virtual gratuito de $1.000 — sem dinheiro real",
     riskSettings: "Configurações de risco",
     stopLoss: "Stop Loss (%)", takeProfit: "Take Profit (%)", maxPosition: "Tamanho máx. posição (%)",
     slTpNote: "Stop loss e take profit são verificados em cada ciclo de execução.",
@@ -267,7 +286,8 @@ const translations = {
     running: "运行中", allTime: "历史总计", currentlyActive: "当前活跃",
     filterAll: "全部", filterRunning: "运行中", filterPaused: "已暂停", filterStopped: "已停止", filterReady: "准备就绪",
     noBots: "暂无机器人", noBotsDesc: "创建您的第一个模拟交易机器人，开始自动交易", createFirstBot: "创建第一个机器人",
-    view: "查看", start: "启动", pause: "暂停", stop: "停止",
+    view: "查看", start: "启动", pause: "暂停", stop: "停止", delete: "删除",
+    deleteConfirm: "删除此机器人？所有交易历史将丢失，此操作无法撤销。",
     balance: "余额", pnl: "盈亏", trades: "交易", openPos: "未平仓",
     lastRun: "上次运行",
     createNewBot: "创建新机器人", chooseTemplate: "选择模板", stepOf: "步骤",
@@ -279,6 +299,8 @@ const translations = {
     description: "描述", descPlaceholder: "可选",
     tradingPair: "交易对", selectPair: "选择交易对...", searchPair: "搜索... 例如 BTC, ETH", noPair: "未找到交易对。",
     timeframe: "时间框架", initialBalance: "初始余额 ($)",
+    simulationMode: "模拟模式", liveMode: "实盘（即将推出）",
+    virtualCreditNote: "免费虚拟额度 $1,000 — 无需真实资金",
     riskSettings: "风险设置",
     stopLoss: "止损 (%)", takeProfit: "止盈 (%)", maxPosition: "最大仓位大小 (%)",
     slTpNote: "止损和止盈在每个执行周期检查。",
@@ -311,11 +333,13 @@ interface BotResponse {
   stopLossPercentage?: number; takeProfitPercentage?: number; maxPositionSizePercentage: number
   totalTrades: number; openPositions: number; createdAt: string; startedAt?: string
   lastExecutionTime?: string; nextExecutionTime?: string; pointsPerDay?: number
+  tradingMode: "SIMULATION" | "LIVE"; virtualCredit: boolean
 }
 interface CreateBotForm {
   name: string; description: string; strategyType: "DCA" | "GRID" | "SCALPING"; tradingPair: string; timeframe: string
   initialBalance: number; stopLossPercentage: number; takeProfitPercentage: number
   maxPositionSizePercentage: number; pointsPerDay: number
+  tradingMode: "SIMULATION" | "LIVE"
   entryConditions: ConditionForm[]; exitConditions: ConditionForm[]
 }
 interface ConditionForm { indicatorName: string; operator: string; comparisonValue: number; logicalOperator: "AND" | "OR" }
@@ -351,15 +375,16 @@ function fmt(n: number, decimals = 2) {
 const defaultForm: CreateBotForm = {
   name: "", description: "", strategyType: "DCA", tradingPair: "BTCUSDT", timeframe: "5m",
   initialBalance: 1000, stopLossPercentage: 5, takeProfitPercentage: 10,
-  maxPositionSizePercentage: 20, pointsPerDay: 1, entryConditions: [], exitConditions: [],
+  maxPositionSizePercentage: 20, pointsPerDay: 1, tradingMode: "SIMULATION",
+  entryConditions: [], exitConditions: [],
 }
 
 // ─── Create Bot Modal ──────────────────────────────────────────────────────
 
-function CreateBotModal({ onClose, onCreated, tr }: { onClose: () => void; onCreated: () => void; tr: typeof translations.en }) {
+function CreateBotModal({ onClose, onCreated, tr, remainingCredit = 1000 }: { onClose: () => void; onCreated: () => void; tr: typeof translations.en; remainingCredit?: number }) {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState<CreateBotForm>(defaultForm)
+  const [form, setForm] = useState<CreateBotForm>({ ...defaultForm, initialBalance: Math.min(remainingCredit, 1000) })
   const [pairs, setPairs] = useState<string[]>([])
   const [loadingPairs, setLoadingPairs] = useState(true)
   const [pairOpen, setPairOpen] = useState(false)
@@ -409,7 +434,7 @@ function CreateBotModal({ onClose, onCreated, tr }: { onClose: () => void; onCre
     if (!form.name.trim()) { toast.error(tr.botNameRequired); return }
     setLoading(true)
     try {
-      const payload = { name: form.name, description: form.description || undefined, strategyType: form.strategyType, tradingPair: form.tradingPair, timeframe: form.timeframe, initialBalance: form.initialBalance, stopLossPercentage: form.stopLossPercentage, takeProfitPercentage: form.takeProfitPercentage, maxPositionSizePercentage: form.maxPositionSizePercentage, pointsPerDay: form.pointsPerDay, entryConditions: form.entryConditions.map((c, i) => ({ ...c, conditionOrder: i })), exitConditions: form.exitConditions.map((c, i) => ({ ...c, conditionOrder: i })) }
+      const payload = { name: form.name, description: form.description || undefined, strategyType: form.strategyType, tradingPair: form.tradingPair, timeframe: form.timeframe, initialBalance: form.initialBalance, stopLossPercentage: form.stopLossPercentage, takeProfitPercentage: form.takeProfitPercentage, maxPositionSizePercentage: form.maxPositionSizePercentage, tradingMode: form.tradingMode, entryConditions: form.entryConditions.map((c, i) => ({ ...c, conditionOrder: i })), exitConditions: form.exitConditions.map((c, i) => ({ ...c, conditionOrder: i })) }
       const res = await fetch(`${API}api/bots`, { method: "POST", headers: authHeader(), body: JSON.stringify(payload) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || tr.failedCreate)
@@ -437,6 +462,19 @@ function CreateBotModal({ onClose, onCreated, tr }: { onClose: () => void; onCre
           </div>
         )}
         <div className="p-4 sm:p-6 space-y-5">
+          {/* Virtual credit warning */}
+          {remainingCredit <= 0 && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-500">
+              <span className="text-base flex-shrink-0">⚠️</span>
+              <p>You've used your full $1,000 virtual credit. Delete an existing bot to free up credit before creating a new one.</p>
+            </div>
+          )}
+          {remainingCredit > 0 && remainingCredit < 200 && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-600">
+              <span className="text-base flex-shrink-0">⚠️</span>
+              <p>Only <strong>${remainingCredit.toFixed(0)}</strong> of virtual credit remaining out of $1,000 total.</p>
+            </div>
+          )}
           {step === 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-primary" /><h3 className="font-semibold">{tr.suggestedConfigs}</h3></div>
@@ -534,7 +572,29 @@ function CreateBotModal({ onClose, onCreated, tr }: { onClose: () => void; onCre
                     </select>
                   </div>
                 </div>
-                <div><Label>{tr.initialBalance}</Label><Input type="number" value={form.initialBalance} onChange={e => set("initialBalance", Number(e.target.value))} min={100} className="mt-1.5" /></div>
+                <div><Label>{tr.initialBalance}</Label><Input type="number" value={form.initialBalance} onChange={e => set("initialBalance", Math.min(remainingCredit, Math.max(100, Number(e.target.value))))} min={100} max={remainingCredit} className="mt-1.5" />
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-muted-foreground">Max ${remainingCredit.toFixed(2)} remaining</p>
+                    {remainingCredit < 1000 && (
+                      <p className="text-xs text-amber-500 font-medium">${(1000 - remainingCredit).toFixed(2)} already allocated</p>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <Label className="mb-2 block">Trading Mode</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => set("tradingMode", "SIMULATION")}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${form.tradingMode === "SIMULATION" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+                      <p className="font-semibold text-sm">🧪 {tr.simulationMode}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{tr.virtualCreditNote}</p>
+                    </button>
+                    <button type="button" disabled
+                      className="p-3 rounded-xl border-2 border-border opacity-40 cursor-not-allowed text-left">
+                      <p className="font-semibold text-sm">💰 {tr.liveMode}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Real funds — coming soon</p>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -605,13 +665,87 @@ function CreateBotModal({ onClose, onCreated, tr }: { onClose: () => void; onCre
               {tr.next} <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           ) : (
-            <Button onClick={handleCreate} disabled={loading} className="bg-primary text-primary-foreground">
+            <Button onClick={handleCreate} disabled={loading || remainingCredit <= 0} className="bg-primary text-primary-foreground">
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-              {loading ? tr.creating : tr.createBotBtn}
+              {loading ? tr.creating : remainingCredit <= 0 ? "No credit remaining" : tr.createBotBtn}
             </Button>
           )}
         </div>
       </Card>
+    </div>
+  )
+}
+
+// ─── Delete Bot Modal ──────────────────────────────────────────────────────
+
+function DeleteBotModal({ botName, tr, onConfirm, onClose }: {
+  botName: string
+  tr: any
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div
+        className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 pb-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{tr.delete} Bot</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">This action cannot be undone</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-5">
+            <p className="text-sm text-foreground">
+              You are about to delete{" "}
+              <span className="font-semibold">"{botName}"</span>.
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {[
+                "All trade history will be permanently lost",
+                "Open positions will not be closed",
+                "Points already consumed will not be refunded",
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <span className="text-red-500 mt-0.5 flex-shrink-0">✕</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-5">
+            {tr.deleteConfirm}
+          </p>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirm}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white border-0 gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              {tr.delete} Bot
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -629,6 +763,14 @@ export default function BotsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [filter, setFilter] = useState<"ALL" | "SIMULATING" | "PAUSED" | "STOPPED" | "CREATED">("ALL")
   const [pointsBalance, setPointsBalance] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [userCreditLimit, setUserCreditLimit] = useState(1000)
+
+  // Total virtual credit currently allocated across all non-deleted simulation bots
+  const usedVirtualCredit = bots
+    .filter(b => b.virtualCredit && b.tradingMode === "SIMULATION")
+    .reduce((sum, b) => sum + (b.initialBalance ?? 0), 0)
+  const remainingVirtualCredit = Math.max(0, userCreditLimit - usedVirtualCredit)
 
   useEffect(() => { const token = localStorage.getItem("auth_token"); if (!token) router.push("/login") }, [router])
 
@@ -647,8 +789,23 @@ export default function BotsPage() {
     } catch { }
   }, [])
 
-  useEffect(() => { fetchBots(); fetchPoints() }, [fetchBots, fetchPoints])
+  const fetchCreditLimit = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}auth/me`, { headers: authHeader() })
+      if (res.ok) {
+        const data = await res.json()
+        setUserCreditLimit(data.simulationCreditLimit ?? 1000)
+      }
+    } catch { }
+  }, [])
+
+  useEffect(() => { fetchBots(); fetchPoints(); fetchCreditLimit() }, [fetchBots, fetchPoints, fetchCreditLimit])
   useEffect(() => { const interval = setInterval(() => { fetchBots(); fetchPoints() }, 30000); return () => clearInterval(interval) }, [fetchBots, fetchPoints])
+  useEffect(() => {
+    const onFocus = () => fetchCreditLimit()
+    window.addEventListener("focus", onFocus)
+    return () => window.removeEventListener("focus", onFocus)
+  }, [fetchCreditLimit])
 
   async function botAction(id: string, action: "start" | "pause" | "stop") {
     setActionLoading(id + action)
@@ -661,6 +818,25 @@ export default function BotsPage() {
       else setTimeout(fetchBots, 2000)
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Action failed") }
     finally { triggerNotificationRefresh(); setActionLoading(null) }
+  }
+
+  async function handleDelete(id: string, name: string) {
+    setDeleteTarget({ id, name })
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const { id, name } = deleteTarget
+    setDeleteTarget(null)
+    setActionLoading(id + "delete")
+    try {
+      const res = await fetch(`${API}api/bots/${id}`, { method: "DELETE", headers: authHeader() })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      toast.success(`Bot "${name}" deleted`)
+      setBots(prev => prev.filter(b => b.id !== id))
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed to delete bot") }
+    finally { setActionLoading(null) }
   }
 
   const STRATEGY_INFO = {
@@ -728,6 +904,22 @@ export default function BotsPage() {
             <p className="text-2xl sm:text-3xl font-bold">{bots.reduce((acc, b) => acc + b.openPositions, 0)}</p>
             <p className="text-xs text-muted-foreground mt-1">{tr.currentlyActive}</p>
           </Card>
+          <Card className="p-4 sm:p-5 border border-violet-500/20 bg-violet-500/5 col-span-2 sm:col-span-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm text-muted-foreground">Virtual Credit</span>
+              <span className="text-xs font-bold text-violet-500">${remainingVirtualCredit.toFixed(0)} left</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2 mb-2">
+              <div
+                className="bg-violet-500 h-2 rounded-full transition-all"
+                style={{ width: `${Math.min(100, (usedVirtualCredit / userCreditLimit) * 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>${usedVirtualCredit.toFixed(0)} used</span>
+              <span>${userCreditLimit.toLocaleString()} limit</span>
+            </div>
+          </Card>
         </div>
 
         {/* Filter Tabs */}
@@ -789,11 +981,18 @@ export default function BotsPage() {
                               {actionLoading === bot.id + "stop" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}{tr.stop}
                             </Button>
                           )}
+                          <Button size="sm" variant="outline" onClick={() => handleDelete(bot.id, bot.name)} disabled={!!actionLoading} className="h-8 gap-1.5 text-red-500 border-red-500/30 hover:bg-red-500/10">
+                            {actionLoading === bot.id + "delete" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}{tr.delete}
+                          </Button>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
                         <span className={`font-medium ${si.color}`}>{bot.strategyType}</span>
                         <span>•</span><span>{bot.tradingPair}</span><span>•</span><span>{bot.timeframe}</span>
+                        <span>•</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${bot.tradingMode === "LIVE" ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-violet-500/10 text-violet-500 border-violet-500/20"}`}>
+                          {bot.tradingMode === "LIVE" ? "LIVE" : "SIM"}
+                        </span>
                         {bot.lastExecutionTime && <><span>•</span><span className="flex items-center gap-1 hidden sm:flex"><Clock className="w-3 h-3" />{tr.lastRun}: {new Date(bot.lastExecutionTime).toLocaleTimeString()}</span></>}
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -824,6 +1023,9 @@ export default function BotsPage() {
                             {actionLoading === bot.id + "stop" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}
                           </Button>
                         )}
+                        <Button size="sm" variant="outline" onClick={() => handleDelete(bot.id, bot.name)} disabled={!!actionLoading} className="h-8 px-2 text-red-500 border-red-500/30 hover:bg-red-500/10">
+                          {actionLoading === bot.id + "delete" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -834,7 +1036,15 @@ export default function BotsPage() {
         )}
       </main>
 
-      {showCreate && <CreateBotModal onClose={() => setShowCreate(false)} onCreated={fetchBots} tr={tr} />}
+      {showCreate && <CreateBotModal onClose={() => setShowCreate(false)} onCreated={fetchBots} tr={tr} remainingCredit={remainingVirtualCredit} />}
+      {deleteTarget && (
+        <DeleteBotModal
+          botName={deleteTarget.name}
+          tr={tr}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   )
 }

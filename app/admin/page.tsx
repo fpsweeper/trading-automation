@@ -13,7 +13,7 @@ import {
     TrendingUp, TrendingDown, Activity, ExternalLink,
     ChevronLeft, ChevronRight, Plus, Minus, Edit2, Send,
     Shield, Eye, EyeOff, BarChart2, Zap, Layers,
-    CheckCircle2, XCircle, Clock, Ban, DollarSign,
+    CheckCircle2, XCircle, Clock, Ban, DollarSign, ScrollText, Trash2,
 } from "lucide-react"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ function shortDate(iso: string) {
 interface AdminUser {
     id: string; email: string; authProvider: string; createdAt: string
     emailVerified: boolean; enabled: boolean; pointsBalance: number
-    totalBots: number; totalDeposits: number
+    totalBots: number; totalDeposits: number; simulationCreditLimit?: number
 }
 interface AdminDeposit {
     id: string; userId: string; userEmail: string; transactionHash: string
@@ -70,7 +70,7 @@ interface PlatformStats {
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "users" | "deposits" | "bots" | "notifications" | "packages"
+type Tab = "overview" | "users" | "deposits" | "bots" | "notifications" | "packages" | "logs"
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "overview", label: "Overview", icon: <BarChart2 className="w-4 h-4" /> },
     { id: "users", label: "Users", icon: <Users className="w-4 h-4" /> },
@@ -78,6 +78,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "bots", label: "Bots", icon: <Bot className="w-4 h-4" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
     { id: "packages", label: "Packages", icon: <Package className="w-4 h-4" /> },
+    { id: "logs", label: "Logs", icon: <ScrollText className="w-4 h-4" /> },
 ]
 
 // ─── Status badges ────────────────────────────────────────────────────────────
@@ -177,9 +178,10 @@ function UsersTab() {
     const [page, setPage] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
     const [selected, setSelected] = useState<AdminUser | null>(null)
-    const [modalType, setModalType] = useState<"points" | "view" | null>(null)
+    const [modalType, setModalType] = useState<"points" | "view" | "credit" | null>(null)
     const [pointsAmount, setPointsAmount] = useState("")
     const [pointsOp, setPointsOp] = useState<"add" | "deduct">("add")
+    const [creditLimit, setCreditLimit] = useState("")
     const [actionLoading, setActionLoading] = useState(false)
 
     const fetch_ = useCallback(async () => {
@@ -224,6 +226,22 @@ function UsersTab() {
         } catch { toast.error("Error") }
     }
 
+    const handleCredit = async () => {
+        if (!selected || !creditLimit) return
+        setActionLoading(true)
+        try {
+            const res = await fetch(`${API}api/admin/users/${selected.id}/simulation-credit`, {
+                method: "PUT", headers: adminHeader(),
+                body: JSON.stringify({ limit: Number(creditLimit) }),
+            })
+            const d = await res.json()
+            if (res.ok) {
+                toast.success(`Credit limit for ${selected.email} set to $${creditLimit}`)
+                setModalType(null); setCreditLimit(""); fetch_()
+            } else { toast.error(d.error || "Failed") }
+        } catch { toast.error("Error") } finally { setActionLoading(false) }
+    }
+
     return (
         <div>
             <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
@@ -245,14 +263,14 @@ function UsersTab() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-border bg-muted/30">
-                                        {["Email", "Provider", "Points", "Bots", "Deposits", "Joined", "Status", "Actions"].map(h => (
+                                        {["Email", "Provider", "Points", "Sim. Credit", "Bots", "Deposits", "Joined", "Status", "Actions"].map(h => (
                                             <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {users.length === 0 ? (
-                                        <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No users found</td></tr>
+                                        <tr><td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">No users found</td></tr>
                                     ) : users.map(u => (
                                         <tr key={u.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                                             <td className="px-4 py-3">
@@ -267,6 +285,11 @@ function UsersTab() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 font-mono text-sm font-semibold">{fmt(u.pointsBalance, 2)}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${(u.simulationCreditLimit ?? 1000) > 1000 ? "bg-violet-500/10 text-violet-500 border-violet-500/20" : "bg-muted text-muted-foreground border-border"}`}>
+                                                    ${(u.simulationCreditLimit ?? 1000).toLocaleString()}
+                                                </span>
+                                            </td>
                                             <td className="px-4 py-3 text-sm">{u.totalBots}</td>
                                             <td className="px-4 py-3 text-sm">{u.totalDeposits}</td>
                                             <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{shortDate(u.createdAt)}</td>
@@ -284,6 +307,10 @@ function UsersTab() {
                                                     <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1 text-yellow-600 border-yellow-500/30 hover:bg-yellow-500/10"
                                                         onClick={() => { setSelected(u); setPointsOp("add"); setModalType("points") }}>
                                                         <Coins className="w-3 h-3" /> Points
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1 text-violet-500 border-violet-500/30 hover:bg-violet-500/10"
+                                                        onClick={() => { setSelected(u); setCreditLimit(String(u.simulationCreditLimit ?? 1000)); setModalType("credit") }}>
+                                                        <Shield className="w-3 h-3" /> Credit
                                                     </Button>
                                                     <Button size="sm" variant="outline" className={`h-7 px-2 text-xs gap-1 ${u.enabled ? "text-red-500 border-red-500/30 hover:bg-red-500/10" : "text-green-600 border-green-500/30 hover:bg-green-500/10"}`}
                                                         onClick={() => toggleUser(u)}>
@@ -322,6 +349,7 @@ function UsersTab() {
                             { label: "Verified", value: selected.emailVerified ? "Yes" : "No" },
                             { label: "Status", value: selected.enabled ? "Active" : "Disabled" },
                             { label: "Points", value: fmt(selected.pointsBalance, 2) },
+                            { label: "Sim. Credit", value: `$${(selected.simulationCreditLimit ?? 1000).toLocaleString()}` },
                             { label: "Total Bots", value: String(selected.totalBots) },
                             { label: "Deposits", value: String(selected.totalDeposits) },
                             { label: "Joined", value: fmtDate(selected.createdAt) },
@@ -362,6 +390,42 @@ function UsersTab() {
                             className={`w-full ${pointsOp === "add" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} text-white`}>
                             {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                             {pointsOp === "add" ? "Add" : "Deduct"} {pointsAmount || "—"} points
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Simulation Credit Modal */}
+            {modalType === "credit" && selected && (
+                <Modal title={`Simulation Credit — ${selected.email}`} onClose={() => { setModalType(null); setSelected(null); setCreditLimit("") }}>
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
+                            <p className="text-xs text-muted-foreground mb-1">Current Limit</p>
+                            <p className="text-3xl font-bold font-mono text-violet-500">
+                                ${(selected.simulationCreditLimit ?? 1000).toLocaleString()}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Default platform limit is $1,000
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[1000, 2500, 5000, 10000, 25000, 50000].map(v => (
+                                <button key={v} onClick={() => setCreditLimit(String(v))}
+                                    className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${creditLimit === String(v) ? "bg-violet-500/10 border-violet-500/30 text-violet-500" : "border-border text-muted-foreground hover:border-violet-500/30"}`}>
+                                    ${v.toLocaleString()}
+                                </button>
+                            ))}
+                        </div>
+                        <div>
+                            <Label>Custom Amount ($)</Label>
+                            <Input type="number" value={creditLimit} onChange={e => setCreditLimit(e.target.value)}
+                                placeholder="e.g. 5000" className="mt-1.5" min={100} max={100000} />
+                            <p className="text-xs text-muted-foreground mt-1">Min $100 — Max $100,000</p>
+                        </div>
+                        <Button onClick={handleCredit} disabled={actionLoading || !creditLimit}
+                            className="w-full bg-violet-600 hover:bg-violet-700 text-white gap-2">
+                            {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                            Set Limit to ${Number(creditLimit || 0).toLocaleString()}
                         </Button>
                     </div>
                 </Modal>
@@ -968,6 +1032,190 @@ function PackagesTab() {
     )
 }
 
+// ─── LOGS TAB ─────────────────────────────────────────────────────────────────
+
+interface AppLog {
+    id: string; level: string; loggerName: string; message: string
+    stackTrace?: string; threadName?: string; createdAt: string
+}
+interface LogSummary { errors: number; warns: number; infos: number; debugs: number; recent: number }
+
+function LogsTab() {
+    const [logs, setLogs] = useState<AppLog[]>([])
+    const [loading, setLoading] = useState(true)
+    const [page, setPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
+    const [totalElements, setTotalElements] = useState(0)
+    const [level, setLevel] = useState("ALL")
+    const [since, setSince] = useState("last1h")
+    const [search, setSearch] = useState("")
+    const [summary, setSummary] = useState<LogSummary | null>(null)
+    const [expanded, setExpanded] = useState<string | null>(null)
+    const [purging, setPurging] = useState(false)
+
+    const fetch_ = useCallback(async () => {
+        setLoading(true)
+        try {
+            const q = new URLSearchParams({
+                page: String(page), size: "50",
+                level, since,
+                ...(search ? { search } : {})
+            })
+            const res = await fetch(`${API}api/admin/logs?${q}`, { headers: adminHeader() })
+            if (res.ok) {
+                const data = await res.json()
+                setLogs(data.logs ?? [])
+                setTotalPages(data.totalPages ?? 1)
+                setTotalElements(data.totalElements ?? 0)
+                setSummary(data.summary ?? null)
+            }
+        } catch { } finally { setLoading(false) }
+    }, [page, level, since, search])
+
+    useEffect(() => { fetch_() }, [fetch_])
+
+    const purgeLogs = async (olderThan: string) => {
+        if (!confirm(`Delete logs older than ${olderThan}? This cannot be undone.`)) return
+        setPurging(true)
+        try {
+            const res = await fetch(`${API}api/admin/logs?olderThan=${olderThan}`, {
+                method: "DELETE", headers: adminHeader()
+            })
+            const d = await res.json()
+            if (res.ok) { toast.success(d.message); fetch_() }
+            else toast.error(d.error || "Failed")
+        } catch { toast.error("Error") } finally { setPurging(false) }
+    }
+
+    const levelColor = (l: string) => {
+        switch (l) {
+            case "ERROR": return "bg-red-500/10 text-red-500 border-red-500/20"
+            case "WARN": return "bg-amber-500/10 text-amber-600 border-amber-500/20"
+            case "INFO": return "bg-blue-500/10 text-blue-500 border-blue-500/20"
+            case "DEBUG": return "bg-gray-500/10 text-gray-500 border-gray-500/20"
+            default: return "bg-muted text-muted-foreground border-border"
+        }
+    }
+
+    const fmtLog = (iso: string) =>
+        new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+
+    return (
+        <div className="space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="text-xl font-bold">Application Logs</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" onClick={fetch_}><RefreshCw className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="sm" onClick={() => purgeLogs("30d")} disabled={purging}
+                        className="text-red-500 border-red-500/30 hover:bg-red-500/10 gap-1.5">
+                        <Trash2 className="w-3.5 h-3.5" /> Purge 30d+
+                    </Button>
+                </div>
+            </div>
+
+            {/* Summary badges */}
+            {summary && (
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { label: "Errors", count: summary.errors, color: "bg-red-500/10 text-red-500 border-red-500/20" },
+                        { label: "Warnings", count: summary.warns, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+                        { label: "Info", count: summary.infos, color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+                        { label: "Debug", count: summary.debugs, color: "bg-gray-500/10 text-gray-500 border-gray-500/20" },
+                        { label: "Errors 24h", count: summary.recent, color: "bg-red-500/10 text-red-500 border-red-500/20" },
+                    ].map(b => (
+                        <span key={b.label} className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${b.color}`}>
+                            {b.label}: {b.count.toLocaleString()}
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 items-center">
+                {/* Level filter */}
+                <div className="flex gap-1">
+                    {["ALL", "ERROR", "WARN", "INFO", "DEBUG"].map(l => (
+                        <button key={l} onClick={() => { setLevel(l); setPage(0) }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${level === l ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}>
+                            {l}
+                        </button>
+                    ))}
+                </div>
+                {/* Time filter */}
+                <div className="flex gap-1">
+                    {[
+                        { value: "last15m", label: "15m" },
+                        { value: "last1h", label: "1h" },
+                        { value: "last6h", label: "6h" },
+                        { value: "last24h", label: "24h" },
+                        { value: "all", label: "All" },
+                    ].map(s => (
+                        <button key={s.value} onClick={() => { setSince(s.value); setPage(0) }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${since === s.value ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}>
+                            {s.label}
+                        </button>
+                    ))}
+                </div>
+                {/* Search */}
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input placeholder="Search message or logger..." value={search}
+                        onChange={e => { setSearch(e.target.value); setPage(0) }}
+                        className="pl-9 h-8 text-sm" />
+                </div>
+                <span className="text-xs text-muted-foreground">{totalElements.toLocaleString()} entries</span>
+            </div>
+
+            {/* Log table */}
+            {loading ? (
+                <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : logs.length === 0 ? (
+                <div className="text-center py-16 text-muted-foreground">
+                    <ScrollText className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No logs found for the selected filters</p>
+                </div>
+            ) : (
+                <div className="border border-border rounded-xl overflow-hidden font-mono text-xs">
+                    {logs.map(log => (
+                        <div key={log.id}
+                            className={`border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors ${log.level === "ERROR" ? "bg-red-500/3" : log.level === "WARN" ? "bg-amber-500/3" : ""}`}>
+                            <div className="flex items-start gap-3 px-4 py-2.5 cursor-pointer"
+                                onClick={() => setExpanded(expanded === log.id ? null : log.id)}>
+                                <span className="text-muted-foreground whitespace-nowrap flex-shrink-0 pt-0.5">{fmtLog(log.createdAt)}</span>
+                                <span className={`px-1.5 py-0.5 rounded border font-bold flex-shrink-0 text-[10px] ${levelColor(log.level)}`}>{log.level}</span>
+                                <span className="text-primary/70 flex-shrink-0 hidden sm:block">[{log.loggerName}]</span>
+                                <span className="text-foreground flex-1 min-w-0 truncate">{log.message}</span>
+                                {log.stackTrace && (
+                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform ${expanded === log.id ? "rotate-90" : ""}`} />
+                                )}
+                            </div>
+                            {expanded === log.id && log.stackTrace && (
+                                <div className="px-4 pb-3">
+                                    <pre className="bg-muted/40 border border-border rounded-lg p-3 text-[11px] overflow-x-auto whitespace-pre-wrap text-destructive max-h-60 overflow-y-auto">
+                                        {log.stackTrace}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Page {page + 1} of {totalPages}</p>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
+                        <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
 // ─── MAIN ADMIN PAGE ──────────────────────────────────────────────────────────
 
 export default function AdminPage() {
@@ -1074,6 +1322,7 @@ export default function AdminPage() {
                 {tab === "bots" && <BotsTab />}
                 {tab === "notifications" && <NotificationsTab />}
                 {tab === "packages" && <PackagesTab />}
+                {tab === "logs" && <LogsTab />}
             </div>
         </div>
     )

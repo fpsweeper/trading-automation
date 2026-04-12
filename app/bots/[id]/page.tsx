@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
 import {
   ArrowLeft, Play, Pause, Square, Activity, Loader2, RefreshCw, BarChart2,
+  Trash2,
   Shield, ChevronLeft, ChevronRight, AlertCircle, Settings2, Pencil,
   Check, ChevronsUpDown, Plus, X, MoreVertical
 } from "lucide-react"
@@ -25,9 +26,10 @@ import { useLanguage } from "@/contexts/LanguageContext"
 const translations = {
   en: {
     backToBots: "Back to Bots",
-    refresh: "Refresh", edit: "Edit", start: "Start", pause: "Pause", stop: "Stop",
+    refresh: "Refresh", edit: "Edit", start: "Start", pause: "Pause", stop: "Stop", delete: "Delete",
+    deleteConfirm: "Delete this bot? All trade history will be permanently lost. This cannot be undone.",
     pauseFirst: "Pause before editing", pauseFirst2: "Pause first",
-    editConfig: "Edit Config", startBot: "Start Bot", pauseBot: "Pause Bot", stopBot: "Stop Bot",
+    editConfig: "Edit Config", startBot: "Start Bot", pauseBot: "Pause Bot", stopBot: "Stop Bot", deleteBot: "Delete Bot",
     balance: "Balance", init: "Init", totalPnl: "Total P&L", winRate: "Win Rate",
     trades: "Trades", open: "open", noTrades: "No trades",
     overview: "overview", tradesTab: "trades", positionsTab: "positions",
@@ -73,9 +75,10 @@ const translations = {
   },
   fr: {
     backToBots: "Retour aux bots",
-    refresh: "Actualiser", edit: "Modifier", start: "Démarrer", pause: "Pause", stop: "Arrêter",
+    refresh: "Actualiser", edit: "Modifier", start: "Démarrer", pause: "Pause", stop: "Arrêter", delete: "Supprimer",
+    deleteConfirm: "Supprimer ce bot ? Tout l'historique sera perdu. Action irréversible.",
     pauseFirst: "Mettez en pause avant de modifier", pauseFirst2: "Mettez en pause d'abord",
-    editConfig: "Modifier la config", startBot: "Démarrer le bot", pauseBot: "Mettre en pause", stopBot: "Arrêter le bot",
+    editConfig: "Modifier la config", startBot: "Démarrer le bot", pauseBot: "Mettre en pause", stopBot: "Arrêter le bot", deleteBot: "Supprimer le bot",
     balance: "Solde", init: "Init", totalPnl: "P&L total", winRate: "Taux de réussite",
     trades: "Trades", open: "ouvert", noTrades: "Aucun trade",
     overview: "aperçu", tradesTab: "trades", positionsTab: "positions",
@@ -120,9 +123,10 @@ const translations = {
   },
   es: {
     backToBots: "Volver a bots",
-    refresh: "Actualizar", edit: "Editar", start: "Iniciar", pause: "Pausar", stop: "Detener",
+    refresh: "Actualizar", edit: "Editar", start: "Iniciar", pause: "Pausar", stop: "Detener", delete: "Eliminar",
+    deleteConfirm: "¿Eliminar este bot? Todo el historial se perderá. Acción irreversible.",
     pauseFirst: "Pausa antes de editar", pauseFirst2: "Pausa primero",
-    editConfig: "Editar config", startBot: "Iniciar bot", pauseBot: "Pausar bot", stopBot: "Detener bot",
+    editConfig: "Editar config", startBot: "Iniciar bot", pauseBot: "Pausar bot", stopBot: "Detener bot", deleteBot: "Eliminar bot",
     balance: "Saldo", init: "Inicial", totalPnl: "P&L total", winRate: "Tasa de éxito",
     trades: "Trades", open: "abierto", noTrades: "Sin trades",
     overview: "resumen", tradesTab: "trades", positionsTab: "posiciones",
@@ -167,9 +171,10 @@ const translations = {
   },
   de: {
     backToBots: "Zurück zu Bots",
-    refresh: "Aktualisieren", edit: "Bearbeiten", start: "Starten", pause: "Pausieren", stop: "Stoppen",
+    refresh: "Aktualisieren", edit: "Bearbeiten", start: "Starten", pause: "Pausieren", stop: "Stoppen", delete: "Löschen",
+    deleteConfirm: "Diesen Bot löschen? Alle Trade-Daten gehen verloren. Diese Aktion ist unumkehrbar.",
     pauseFirst: "Erst pausieren zum Bearbeiten", pauseFirst2: "Erst pausieren",
-    editConfig: "Konfiguration bearbeiten", startBot: "Bot starten", pauseBot: "Bot pausieren", stopBot: "Bot stoppen",
+    editConfig: "Konfiguration bearbeiten", startBot: "Bot starten", pauseBot: "Bot pausieren", stopBot: "Bot stoppen", deleteBot: "Bot löschen",
     balance: "Guthaben", init: "Start", totalPnl: "Gesamt G&V", winRate: "Gewinnrate",
     trades: "Trades", open: "offen", noTrades: "Keine Trades",
     overview: "Übersicht", tradesTab: "Trades", positionsTab: "Positionen",
@@ -214,9 +219,10 @@ const translations = {
   },
   ja: {
     backToBots: "ボット一覧に戻る",
-    refresh: "更新", edit: "編集", start: "開始", pause: "一時停止", stop: "停止",
+    refresh: "更新", edit: "編集", start: "開始", pause: "一時停止", stop: "停止", delete: "削除",
+    deleteConfirm: "このボットを削除しますか？全ての取引履歴が失われます。この操作は元に戻せません。",
     pauseFirst: "編集前に一時停止してください", pauseFirst2: "先に一時停止",
-    editConfig: "設定を編集", startBot: "ボット開始", pauseBot: "ボット一時停止", stopBot: "ボット停止",
+    editConfig: "設定を編集", startBot: "ボット開始", pauseBot: "ボット一時停止", stopBot: "ボット停止", deleteBot: "ボット削除",
     balance: "残高", init: "初期", totalPnl: "総損益", winRate: "勝率",
     trades: "取引", open: "未決済", noTrades: "取引なし",
     overview: "概要", tradesTab: "取引", positionsTab: "ポジション",
@@ -261,9 +267,10 @@ const translations = {
   },
   pt: {
     backToBots: "Voltar aos bots",
-    refresh: "Atualizar", edit: "Editar", start: "Iniciar", pause: "Pausar", stop: "Parar",
+    refresh: "Atualizar", edit: "Editar", start: "Iniciar", pause: "Pausar", stop: "Parar", delete: "Excluir",
+    deleteConfirm: "Excluir este bot? Todo o histórico será perdido. Ação irreversível.",
     pauseFirst: "Pause antes de editar", pauseFirst2: "Pause primeiro",
-    editConfig: "Editar config", startBot: "Iniciar bot", pauseBot: "Pausar bot", stopBot: "Parar bot",
+    editConfig: "Editar config", startBot: "Iniciar bot", pauseBot: "Pausar bot", stopBot: "Parar bot", deleteBot: "Excluir bot",
     balance: "Saldo", init: "Inicial", totalPnl: "L&P total", winRate: "Taxa de acerto",
     trades: "Trades", open: "aberto", noTrades: "Sem trades",
     overview: "visão geral", tradesTab: "trades", positionsTab: "posições",
@@ -308,9 +315,10 @@ const translations = {
   },
   zh: {
     backToBots: "返回机器人列表",
-    refresh: "刷新", edit: "编辑", start: "启动", pause: "暂停", stop: "停止",
+    refresh: "刷新", edit: "编辑", start: "启动", pause: "暂停", stop: "停止", delete: "删除",
+    deleteConfirm: "删除此机器人？所有交易历史将永久丢失，此操作无法撤销。",
     pauseFirst: "编辑前请先暂停", pauseFirst2: "请先暂停",
-    editConfig: "编辑配置", startBot: "启动机器人", pauseBot: "暂停机器人", stopBot: "停止机器人",
+    editConfig: "编辑配置", startBot: "启动机器人", pauseBot: "暂停机器人", stopBot: "停止机器人", deleteBot: "删除机器人",
     balance: "余额", init: "初始", totalPnl: "总盈亏", winRate: "胜率",
     trades: "交易", open: "未平仓", noTrades: "无交易",
     overview: "概览", tradesTab: "交易", positionsTab: "仓位",
@@ -366,6 +374,7 @@ interface BotResponse {
   totalTrades: number; openPositions: number; createdAt: string; startedAt?: string
   lastExecutionTime?: string; nextExecutionTime?: string; pointsPerDay?: number
   configuration: Record<string, unknown>
+  tradingMode: "SIMULATION" | "LIVE"; virtualCredit: boolean
 }
 interface BotTrade {
   id: string; tradeType: "BUY" | "SELL"; symbol: string; amount: number; price: number
@@ -703,7 +712,7 @@ function EditBotModal({ bot, onClose, onUpdated, tr }: { bot: BotResponse; onClo
         entryConditions: (d.entryConditions ?? []).map((c: ConditionForm) => ({ indicatorName: c.indicatorName, operator: c.operator, comparisonValue: c.comparisonValue, logicalOperator: c.logicalOperator })),
         exitConditions: (d.exitConditions ?? []).map((c: ConditionForm) => ({ indicatorName: c.indicatorName, operator: c.operator, comparisonValue: c.comparisonValue, logicalOperator: c.logicalOperator })),
       }))
-    }).catch(() => {})
+    }).catch(() => { })
   }, [bot.id])
 
   const set = (k: keyof EditBotForm, v: unknown) => setForm(p => ({ ...p, [k]: v }))
@@ -835,6 +844,79 @@ function EditBotModal({ bot, onClose, onUpdated, tr }: { bot: BotResponse; onClo
 
 // ─── Main Page ─────────────────────────────────────────────────────────────
 
+// ─── Delete Bot Modal ──────────────────────────────────────────────────────
+
+function DeleteBotModal({ botName, tr, onConfirm, onClose }: {
+  botName: string
+  tr: any
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div
+        className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 pb-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{tr.delete} Bot</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">This action cannot be undone</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-5">
+            <p className="text-sm text-foreground">
+              You are about to delete{" "}
+              <span className="font-semibold">"{botName}"</span>.
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {[
+                "All trade history will be permanently lost",
+                "Open positions will not be closed",
+                "Points already consumed will not be refunded",
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <span className="text-red-500 mt-0.5 flex-shrink-0">✕</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-5">{tr.deleteConfirm}</p>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirm}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white border-0 gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              {tr.delete} Bot
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────
+
 export default function BotDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -852,6 +934,7 @@ export default function BotDetailPage() {
   const [conditions, setConditions] = useState<{ entryConditions: ConditionForm[]; exitConditions: ConditionForm[] }>({ entryConditions: [], exitConditions: [] })
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [activeTab, setActiveTab] = useState<"overview" | "trades" | "positions">("overview")
@@ -861,9 +944,9 @@ export default function BotDetailPage() {
   function statusConfig(status: BotResponse["status"]) {
     const map: Record<string, { label: string; dot: string; badge: string }> = {
       SIMULATING: { label: tr.running, dot: "bg-green-500 animate-pulse", badge: "bg-green-500/10 text-green-600 border-green-500/20" },
-      PAUSED:     { label: tr.paused,  dot: "bg-yellow-500",              badge: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-      STOPPED:    { label: tr.stopped, dot: "bg-gray-400",                badge: "bg-gray-500/10 text-gray-500 border-gray-500/20" },
-      CREATED:    { label: tr.ready,   dot: "bg-blue-500",                badge: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+      PAUSED: { label: tr.paused, dot: "bg-yellow-500", badge: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+      STOPPED: { label: tr.stopped, dot: "bg-gray-400", badge: "bg-gray-500/10 text-gray-500 border-gray-500/20" },
+      CREATED: { label: tr.ready, dot: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
     }
     return map[status] ?? { label: status, dot: "bg-gray-400", badge: "bg-gray-500/10 text-gray-500 border-gray-500/20" }
   }
@@ -902,7 +985,7 @@ export default function BotDetailPage() {
         time: new Date(c.openTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         open: c.openPrice, high: c.highPrice, low: c.lowPrice, close: c.closePrice, volume: c.volume,
       })))
-    } catch {}
+    } catch { }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -921,6 +1004,25 @@ export default function BotDetailPage() {
     finally { triggerNotificationRefresh(); setActionLoading(null) }
   }
 
+  async function handleDelete() {
+    if (!bot) return
+    setShowDeleteModal(true)
+  }
+
+  async function confirmDelete() {
+    if (!bot) return
+    setShowDeleteModal(false)
+    setActionLoading("delete"); setShowMenu(false)
+    try {
+      const res = await fetch(`${API}api/bots/${botId}`, { method: "DELETE", headers: authHeader() })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      toast.success(`Bot "${bot.name}" deleted`)
+      router.push("/bots")
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed to delete bot") }
+    finally { setActionLoading(null) }
+  }
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
   if (!bot) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -933,25 +1035,27 @@ export default function BotDetailPage() {
   const TFS = ["5m", "15m", "1h", "4h", "1d"]
 
   const perfRows = [
-    { label: tr.realizedPnl,        value: `$${fmt(stats?.totalRealizedPnl)}`,   color: (stats?.totalRealizedPnl ?? 0) >= 0 ? "text-green-500" : "text-destructive" },
-    { label: tr.unrealizedPnl,      value: `$${fmt(stats?.totalUnrealizedPnl)}`, color: (stats?.totalUnrealizedPnl ?? 0) >= 0 ? "text-green-500" : "text-destructive" },
-    { label: tr.avgWin,             value: stats?.averageWin != null ? `$${fmt(stats.averageWin)}` : "—",  color: "text-green-500" },
-    { label: tr.avgLoss,            value: stats?.averageLoss != null ? `$${fmt(stats.averageLoss)}` : "—", color: "text-destructive" },
-    { label: tr.bestTrade,          value: stats?.largestWin != null ? `$${fmt(stats.largestWin)}` : "—",  color: "text-green-500" },
-    { label: tr.worstTrade,         value: stats?.largestLoss != null ? `$${fmt(stats.largestLoss)}` : "—", color: "text-destructive" },
+    { label: tr.realizedPnl, value: `$${fmt(stats?.totalRealizedPnl)}`, color: (stats?.totalRealizedPnl ?? 0) >= 0 ? "text-green-500" : "text-destructive" },
+    { label: tr.unrealizedPnl, value: `$${fmt(stats?.totalUnrealizedPnl)}`, color: (stats?.totalUnrealizedPnl ?? 0) >= 0 ? "text-green-500" : "text-destructive" },
+    { label: tr.avgWin, value: stats?.averageWin != null ? `$${fmt(stats.averageWin)}` : "—", color: "text-green-500" },
+    { label: tr.avgLoss, value: stats?.averageLoss != null ? `$${fmt(stats.averageLoss)}` : "—", color: "text-destructive" },
+    { label: tr.bestTrade, value: stats?.largestWin != null ? `$${fmt(stats.largestWin)}` : "—", color: "text-green-500" },
+    { label: tr.worstTrade, value: stats?.largestLoss != null ? `$${fmt(stats.largestLoss)}` : "—", color: "text-destructive" },
     { label: tr.openPositionsValue, value: `$${fmt(stats?.openPositionsValue)}`, color: "text-foreground" },
   ]
   const configRows = [
-    { label: tr.strategy,       value: bot.strategyType },
-    { label: tr.pair,           value: bot.tradingPair },
-    { label: tr.timeframe,      value: bot.timeframe },
-    { label: tr.initialBal,     value: `$${fmt(bot.initialBalance)}` },
-    { label: tr.stopLoss,       value: bot.stopLossPercentage != null ? `${bot.stopLossPercentage}%` : "—" },
-    { label: tr.takeProfit,     value: bot.takeProfitPercentage != null ? `${bot.takeProfitPercentage}%` : "—" },
-    { label: tr.maxPosition,    value: `${bot.maxPositionSizePercentage}%` },
+    { label: tr.strategy, value: bot.strategyType },
+    { label: tr.pair, value: bot.tradingPair },
+    { label: tr.timeframe, value: bot.timeframe },
+    { label: "Mode", value: bot.tradingMode === "LIVE" ? "💰 Live" : "🧪 Simulation" },
+    { label: "Balance Type", value: bot.virtualCredit ? "Virtual Credit" : "Real Funds" },
+    { label: tr.initialBal, value: `$${fmt(bot.initialBalance)}` },
+    { label: tr.stopLoss, value: bot.stopLossPercentage != null ? `${bot.stopLossPercentage}%` : "—" },
+    { label: tr.takeProfit, value: bot.takeProfitPercentage != null ? `${bot.takeProfitPercentage}%` : "—" },
+    { label: tr.maxPosition, value: `${bot.maxPositionSizePercentage}%` },
     { label: tr.pointsPerTrade, value: String(bot.pointsPerDay ?? "1") },
-    { label: tr.lastRun,        value: bot.lastExecutionTime ? fmtTime(bot.lastExecutionTime) : "—" },
-    { label: tr.nextRun,        value: bot.nextExecutionTime ? fmtTime(bot.nextExecutionTime) : "—" },
+    { label: tr.lastRun, value: bot.lastExecutionTime ? fmtTime(bot.lastExecutionTime) : "—" },
+    { label: tr.nextRun, value: bot.nextExecutionTime ? fmtTime(bot.nextExecutionTime) : "—" },
   ]
 
   return (
@@ -973,6 +1077,13 @@ export default function BotDetailPage() {
               <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
                 <span className={`font-medium ${STRATEGY_COLORS[bot.strategyType]}`}>{bot.strategyType}</span>
                 <span>•</span><span>{bot.tradingPair}</span><span>•</span><span>{bot.timeframe}</span>
+                <span>•</span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${bot.tradingMode === "LIVE" ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-violet-500/10 text-violet-500 border-violet-500/20"}`}>
+                  {bot.tradingMode === "LIVE" ? "LIVE" : "SIM"}
+                </span>
+                {bot.virtualCredit && bot.tradingMode === "SIMULATION" && (
+                  <span className="text-[10px] text-muted-foreground">Virtual Credit</span>
+                )}
                 {bot.startedAt && <><span>•</span><span className="hidden sm:inline">Started {new Date(bot.startedAt).toLocaleDateString()}</span></>}
               </div>
             </div>
@@ -999,6 +1110,9 @@ export default function BotDetailPage() {
                   {actionLoading === "stop" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}{tr.stop}
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={handleDelete} disabled={!!actionLoading} className="gap-1.5 text-red-500 border-red-500/30 hover:bg-red-500/10">
+                {actionLoading === "delete" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}{tr.delete}
+              </Button>
             </div>
             {/* Mobile kebab */}
             <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
@@ -1014,6 +1128,10 @@ export default function BotDetailPage() {
                       {(bot.status === "CREATED" || bot.status === "PAUSED") && <button onClick={() => botAction("start")} className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-muted text-green-600"><Play className="w-4 h-4" />{tr.startBot}</button>}
                       {bot.status === "SIMULATING" && <button onClick={() => botAction("pause")} className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-muted text-yellow-600"><Pause className="w-4 h-4" />{tr.pauseBot}</button>}
                       {(bot.status === "SIMULATING" || bot.status === "PAUSED") && <button onClick={() => botAction("stop")} className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-muted text-destructive"><Square className="w-4 h-4" />{tr.stopBot}</button>}
+                      <div className="border-t border-border" />
+                      <button onClick={handleDelete} className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-red-500/10 text-red-500">
+                        {actionLoading === "delete" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}{tr.deleteBot}
+                      </button>
                     </div>
                   </>
                 )}
@@ -1117,13 +1235,13 @@ export default function BotDetailPage() {
                     {conditions.entryConditions.length === 0
                       ? <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40 border border-border">{tr.defaultStrategyLogic}</p>
                       : <div className="space-y-1.5">{conditions.entryConditions.map((c, i) => (
-                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-green-500/5 border border-green-500/20 text-xs">
-                            {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
-                            <span className="font-medium text-foreground">{c.indicatorName}</span>
-                            <span className="text-muted-foreground">{c.operator}</span>
-                            <span className="font-mono font-semibold text-green-600">{c.comparisonValue}</span>
-                          </div>
-                        ))}</div>
+                        <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-green-500/5 border border-green-500/20 text-xs">
+                          {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
+                          <span className="font-medium text-foreground">{c.indicatorName}</span>
+                          <span className="text-muted-foreground">{c.operator}</span>
+                          <span className="font-mono font-semibold text-green-600">{c.comparisonValue}</span>
+                        </div>
+                      ))}</div>
                     }
                   </div>
                   <div>
@@ -1131,13 +1249,13 @@ export default function BotDetailPage() {
                     {conditions.exitConditions.length === 0
                       ? <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40 border border-border">{tr.slTpOnly}</p>
                       : <div className="space-y-1.5">{conditions.exitConditions.map((c, i) => (
-                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-xs">
-                            {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
-                            <span className="font-medium text-foreground">{c.indicatorName}</span>
-                            <span className="text-muted-foreground">{c.operator}</span>
-                            <span className="font-mono font-semibold text-red-500">{c.comparisonValue}</span>
-                          </div>
-                        ))}</div>
+                        <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-xs">
+                          {i > 0 && <span className="text-xs font-bold text-muted-foreground">{c.logicalOperator}</span>}
+                          <span className="font-medium text-foreground">{c.indicatorName}</span>
+                          <span className="text-muted-foreground">{c.operator}</span>
+                          <span className="font-mono font-semibold text-red-500">{c.comparisonValue}</span>
+                        </div>
+                      ))}</div>
                     }
                   </div>
                 </div>
@@ -1225,6 +1343,14 @@ export default function BotDetailPage() {
         )}
       </main>
       {showEdit && bot && <EditBotModal bot={bot} onClose={() => setShowEdit(false)} onUpdated={fetchAll} tr={tr} />}
+      {showDeleteModal && bot && (
+        <DeleteBotModal
+          botName={bot.name}
+          tr={tr}
+          onConfirm={confirmDelete}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   )
 }
