@@ -447,6 +447,8 @@ function fmtTime(iso: string) {
 function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData[]; trades: BotTrade[]; symbol: string; tr: typeof translations.en }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<unknown>(null)
+  const roRef = useRef<ResizeObserver | null>(null)
+
   const last = candles[candles.length - 1]
   const first = candles[0]
   const change = last && first ? last.close - first.close : 0
@@ -454,15 +456,24 @@ function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData
   const pos = change >= 0
 
   useEffect(() => {
+    // Always destroy previous chart + observer before creating new one
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+    if (chartRef.current) { (chartRef.current as { remove: () => void }).remove(); chartRef.current = null }
+
     if (!containerRef.current || !candles.length) return
+
+    let cancelled = false
+
     import("lightweight-charts").then((lwc) => {
-      if (!containerRef.current) return
-      if (chartRef.current) { (chartRef.current as { remove: () => void }).remove(); chartRef.current = null }
+      if (cancelled || !containerRef.current) return
+
       const dark = document.documentElement.classList.contains("dark")
       const bc = dark ? "#1e293b" : "#e2e8f0"
       const tc = dark ? "#94a3b8" : "#64748b"
-      const chart = lwc.createChart(containerRef.current!, {
-        width: containerRef.current!.clientWidth, height: 280,
+
+      const chart = lwc.createChart(containerRef.current, {
+        width: containerRef.current.clientWidth || containerRef.current.offsetWidth || 600,
+        height: 280,
         layout: { background: { type: lwc.ColorType.Solid, color: "transparent" }, textColor: tc, fontSize: 10 },
         grid: { vertLines: { color: bc }, horzLines: { color: bc } },
         crosshair: { mode: lwc.CrosshairMode.Normal },
@@ -470,37 +481,56 @@ function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData
         timeScale: { borderColor: bc, timeVisible: true, secondsVisible: false, fixLeftEdge: true, fixRightEdge: true },
       })
       chartRef.current = chart
+
       const cs = chart.addSeries(lwc.CandlestickSeries, {
         upColor: "#22c55e", downColor: "#ef4444",
         borderUpColor: "#22c55e", borderDownColor: "#ef4444",
         wickUpColor: "#22c55e", wickDownColor: "#ef4444", borderVisible: true,
       })
+
       type T = number & { readonly __t: unique symbol }
       const toT = (iso: string): T => Math.floor(new Date(iso).getTime() / 1000) as unknown as T
+
       const sorted = [...candles].sort((a, b) => new Date(a.rawTime ?? a.time).getTime() - new Date(b.rawTime ?? b.time).getTime())
       cs.setData(sorted.map(c => ({ time: toT(c.rawTime ?? c.time), open: c.open, high: c.high, low: c.low, close: c.close })))
+
       const vs = chart.addSeries(lwc.HistogramSeries, { color: "#3b82f6", priceFormat: { type: "volume" as const }, priceScaleId: "vol" })
       chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } })
       vs.setData(sorted.map(c => ({ time: toT(c.rawTime ?? c.time), value: c.volume, color: c.close >= c.open ? "#22c55e50" : "#ef444450" })))
+
       if (trades.length > 0) {
-        const markers = trades.filter(t => t.executedAt).map(t => ({
-          time: toT(t.executedAt),
-          position: (t.tradeType === "BUY" ? "belowBar" : "aboveBar") as "belowBar" | "aboveBar",
-          color: t.tradeType === "BUY" ? "#22c55e" : "#ef4444",
-          shape: (t.tradeType === "BUY" ? "arrowUp" : "arrowDown") as "arrowUp" | "arrowDown",
-          text: t.tradeType === "BUY" ? `B $${t.price?.toFixed(0)}` : `S $${t.price?.toFixed(0)}`,
-          size: 1,
-        })).sort((a, b) => (a.time as unknown as number) - (b.time as unknown as number))
+        const markers = trades
+          .filter(t => t.executedAt)
+          .map(t => ({
+            time: toT(t.executedAt),
+            position: (t.tradeType === "BUY" ? "belowBar" : "aboveBar") as "belowBar" | "aboveBar",
+            color: t.tradeType === "BUY" ? "#22c55e" : "#ef4444",
+            shape: (t.tradeType === "BUY" ? "arrowUp" : "arrowDown") as "arrowUp" | "arrowDown",
+            text: t.tradeType === "BUY" ? `B $${t.price?.toFixed(0)}` : `S $${t.price?.toFixed(0)}`,
+            size: 1,
+          }))
+          .sort((a, b) => (a.time as unknown as number) - (b.time as unknown as number))
         lwc.createSeriesMarkers(cs, markers as never)
       }
+
       chart.timeScale().fitContent()
-      const ro = new ResizeObserver(es => {
-        if (es[0] && chartRef.current) (chartRef.current as { applyOptions: (o: object) => void }).applyOptions({ width: es[0].contentRect.width })
+
+      // Wire up ResizeObserver via ref so cleanup can always reach it
+      const ro = new ResizeObserver(entries => {
+        if (entries[0] && chartRef.current) {
+          const w = entries[0].contentRect.width
+          if (w > 0) (chartRef.current as { applyOptions: (o: object) => void }).applyOptions({ width: w })
+        }
       })
-      ro.observe(containerRef.current!)
-      return () => ro.disconnect()
+      ro.observe(containerRef.current)
+      roRef.current = ro
     })
-    return () => { if (chartRef.current) { (chartRef.current as { remove: () => void }).remove(); chartRef.current = null } }
+
+    return () => {
+      cancelled = true
+      if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+      if (chartRef.current) { (chartRef.current as { remove: () => void }).remove(); chartRef.current = null }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candles, trades])
 
@@ -513,7 +543,7 @@ function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData
       </div>
       {candles.length === 0
         ? <div className="flex items-center justify-center h-56 text-muted-foreground text-sm gap-2"><AlertCircle className="w-4 h-4" />{tr.noPriceData}</div>
-        : <div ref={containerRef} className="w-full rounded-lg overflow-hidden" />}
+        : <div ref={containerRef} className="w-full rounded-lg overflow-hidden" style={{ minHeight: 280 }} />}
       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-500 inline-block" />{tr.bull}</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" />{tr.bear}</span>
@@ -976,6 +1006,7 @@ export default function BotDetailPage() {
   }, [botId, router, tradePage, tr.failedLoad])
 
   const fetchCandles = useCallback(async (pair: string, tf: string) => {
+    setCandles([]) // clear immediately so chart doesn't show stale data
     try {
       const res = await fetch(`${API}api/market-data/candles/${pair}?timeframe=${tf}&limit=100`)
       if (!res.ok) return

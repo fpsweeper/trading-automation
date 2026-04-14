@@ -119,7 +119,6 @@ function NotificationPanel({ notifications, unreadCount, loading, onMarkAllRead,
 
 export default function Header() {
   const { isAuthenticated, role, username, logout } = useAuth()
-  // ✅ Global language context — changing here instantly updates Hero, Features, Footer etc.
   const { language, setLanguage } = useLanguage()
   const router = useRouter()
 
@@ -150,7 +149,6 @@ export default function Header() {
     document.documentElement.classList.toggle("dark", next)
   }
 
-  // ✅ setLanguage from context — all components using useLanguage() re-render instantly
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang as any)
     setShowLangMenu(false)
@@ -212,11 +210,15 @@ export default function Header() {
   }
 
   const handleDismiss = async (id: string) => {
+    // Optimistic update
+    setNotifications(prev => {
+      const n = prev.find(n => n.id === id)
+      if (n && !n.read) setUnreadCount(c => Math.max(0, c - 1))
+      return prev.filter(n => n.id !== id)
+    })
     try {
-      await fetch(`${API}api/notifications/${id}/read`, { method: "PUT", headers: authHeader() })
-      setNotifications(prev => prev.filter(n => n.id !== id))
-      setUnreadCount(prev => Math.max(0, prev - 1))
-    } catch { setNotifications(prev => prev.filter(n => n.id !== id)) }
+      await fetch(`${API}api/notifications/${id}`, { method: "DELETE", headers: authHeader() })
+    } catch { /* already removed from UI */ }
   }
 
   const handleClearAll = async () => {
@@ -236,6 +238,8 @@ export default function Header() {
       )}
     </Button>
   )
+
+  const isAdmin = isAuthenticated && role === "ADMIN"
 
   return (
     <>
@@ -298,14 +302,11 @@ export default function Header() {
                         <span className="text-sm font-medium text-foreground">{username}</span>
                       </div>
                     </Link>
-
-                    {isAuthenticated && role === 'ADMIN' && (
-                      <Link href="/admin" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-                        <Shield className="w-4 h-4" />
-                        Admin
+                    {isAdmin && (
+                      <Link href="/admin" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <Shield className="w-4 h-4" />Admin
                       </Link>
                     )}
-
                     <Link href="/dashboard"><Button variant="outline" size="sm">Dashboard</Button></Link>
                     <Link href="/wallet"><Button variant="outline" size="sm">Wallet</Button></Link>
                     <Link href="/bots"><Button variant="outline" size="sm">Bots</Button></Link>
@@ -368,6 +369,13 @@ export default function Header() {
                       <Button variant="ghost" className="w-full justify-start text-base h-12">{label}</Button>
                     </Link>
                   ))}
+                  {isAdmin && (
+                    <Link href="/admin" onClick={() => setShowMobileMenu(false)}>
+                      <Button variant="ghost" className="w-full justify-start text-base h-12 text-primary">
+                        <Shield className="w-4 h-4 mr-2" />Admin Panel
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               )}
               <div className="space-y-3 pt-4 border-t border-border">
