@@ -449,8 +449,10 @@ function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData
   const chartRef = useRef<unknown>(null)
   const roRef = useRef<ResizeObserver | null>(null)
 
-  const last = candles[candles.length - 1]
-  const first = candles[0]
+  // API returns newest-first (ORDER BY open_time DESC)
+  // so candles[0] = most recent, candles[last] = oldest
+  const last = candles[0]                        // most recent = current price
+  const first = candles[candles.length - 1]       // oldest = start of range
   const change = last && first ? last.close - first.close : 0
   const changePct = first?.close ? (change / first.close) * 100 : 0
   const pos = change >= 0
@@ -1005,18 +1007,23 @@ export default function BotDetailPage() {
     finally { setLoading(false) }
   }, [botId, router, tradePage, tr.failedLoad])
 
+  const [candleLoading, setCandleLoading] = useState(false)
+
   const fetchCandles = useCallback(async (pair: string, tf: string) => {
-    setCandles([]) // clear immediately so chart doesn't show stale data
+    setCandleLoading(true)
     try {
       const res = await fetch(`${API}api/market-data/candles/${pair}?timeframe=${tf}&limit=100`)
       if (!res.ok) return
       const data = await res.json()
-      setCandles((data.candles ?? []).map((c: { openTime: string; openPrice: number; highPrice: number; lowPrice: number; closePrice: number; volume: number }) => ({
+      const mapped = (data.candles ?? []).map((c: { openTime: string; openPrice: number; highPrice: number; lowPrice: number; closePrice: number; volume: number }) => ({
         rawTime: c.openTime,
         time: new Date(c.openTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         open: c.openPrice, high: c.highPrice, low: c.lowPrice, close: c.closePrice, volume: c.volume,
-      })))
+      }))
+      // Only update if we actually got data — never flash empty
+      if (mapped.length > 0) setCandles(mapped)
     } catch { }
+    finally { setCandleLoading(false) }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -1212,7 +1219,10 @@ export default function BotDetailPage() {
           <div className="space-y-4 sm:space-y-6">
             <Card className="p-4 sm:p-6 border border-border">
               <div className="flex items-center justify-between mb-3 gap-2">
-                <h2 className="font-semibold text-sm sm:text-base shrink-0">{bot.tradingPair}</h2>
+                <div className="flex items-center gap-2 shrink-0">
+                  <h2 className="font-semibold text-sm sm:text-base">{bot.tradingPair}</h2>
+                  {candleLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                </div>
                 <div className="flex gap-1 overflow-x-auto">
                   {TFS.map(tf => (
                     <button key={tf} onClick={() => setCandleTimeframe(tf)}
