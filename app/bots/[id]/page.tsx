@@ -444,16 +444,18 @@ function fmtTime(iso: string) {
 
 // ─── Candlestick Chart ────────────────────────────────────────────────────
 
-function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData[]; trades: BotTrade[]; symbol: string; tr: typeof translations.en }) {
+function CandlestickChart({ candles, trades, symbol, tr, marketPrice }: { candles: CandleData[]; trades: BotTrade[]; symbol: string; tr: typeof translations.en; marketPrice: number | null }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<unknown>(null)
   const roRef = useRef<ResizeObserver | null>(null)
 
   // API returns newest-first (ORDER BY open_time DESC)
-  // so candles[0] = most recent, candles[last] = oldest
-  const last = candles[0]                        // most recent = current price
-  const first = candles[candles.length - 1]       // oldest = start of range
-  const change = last && first ? last.close - first.close : 0
+  // candles[0] = most recent, candles[last] = oldest
+  // Use marketPrice (fetched independently) for display so it doesn't
+  // change when switching timeframes
+  const displayPrice = marketPrice ?? candles[0]?.close ?? null
+  const first = candles[candles.length - 1]   // oldest candle = start of range
+  const change = displayPrice && first ? displayPrice - first.close : 0
   const changePct = first?.close ? (change / first.close) * 100 : 0
   const pos = change >= 0
 
@@ -539,8 +541,8 @@ function CandlestickChart({ candles, trades, symbol, tr }: { candles: CandleData
   return (
     <div>
       <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-xl sm:text-2xl font-bold font-mono">{last ? `$${fmt(last.close)}` : "—"}</span>
-        {last && first && <span className={`text-sm font-medium ${pos ? "text-green-500" : "text-red-500"}`}>{pos ? "+" : ""}{fmt(change)} ({pos ? "+" : ""}{changePct.toFixed(2)}%)</span>}
+        <span className="text-xl sm:text-2xl font-bold font-mono">{displayPrice ? `$${fmt(displayPrice)}` : "—"}</span>
+        {displayPrice && first && <span className={`text-sm font-medium ${pos ? "text-green-500" : "text-red-500"}`}>{pos ? "+" : ""}{fmt(change)} ({pos ? "+" : ""}{changePct.toFixed(2)}%)</span>}
         <span className="text-xs text-muted-foreground ml-auto">{candles.length} · {symbol}</span>
       </div>
       {candles.length === 0
@@ -962,6 +964,7 @@ export default function BotDetailPage() {
   const [positions, setPositions] = useState<BotPosition[]>([])
   const [snapshots, setSnapshots] = useState<PerformanceSnapshot[]>([])
   const [candles, setCandles] = useState<CandleData[]>([])
+  const [marketPrice, setMarketPrice] = useState<number | null>(null)
   const [candleTimeframe, setCandleTimeframe] = useState("1h")
   const [conditions, setConditions] = useState<{ entryConditions: ConditionForm[]; exitConditions: ConditionForm[] }>({ entryConditions: [], exitConditions: [] })
   const [loading, setLoading] = useState(true)
@@ -1026,9 +1029,30 @@ export default function BotDetailPage() {
     finally { setCandleLoading(false) }
   }, [])
 
+  const fetchMarketPrice = useCallback(async (pair: string) => {
+    try {
+      const res = await fetch(`${API}api/market-data/price/${pair}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.price) setMarketPrice(Number(data.price))
+      }
+    } catch { }
+  }, [])
+
   useEffect(() => { fetchAll() }, [fetchAll])
-  useEffect(() => { if (bot) fetchCandles(bot.tradingPair, candleTimeframe) }, [bot, candleTimeframe, fetchCandles])
-  useEffect(() => { const i = setInterval(fetchAll, 30000); return () => clearInterval(i) }, [fetchAll])
+  useEffect(() => { if (bot) { fetchCandles(bot.tradingPair, candleTimeframe); } }, [bot, candleTimeframe, fetchCandles])
+  useEffect(() => { if (bot) fetchMarketPrice(bot.tradingPair) }, [bot, fetchMarketPrice])
+  // Price refreshes every 10s independently — much faster than the 30s full refresh
+  useEffect(() => {
+    if (!bot) return
+    const priceInterval = setInterval(() => fetchMarketPrice(bot.tradingPair), 10000)
+    return () => clearInterval(priceInterval)
+  }, [bot, fetchMarketPrice])
+  useEffect(() => {
+    if (!bot) return
+    const i = setInterval(() => { fetchAll(); fetchMarketPrice(bot.tradingPair) }, 30000)
+    return () => clearInterval(i)
+  }, [fetchAll, fetchMarketPrice, bot])
 
   async function botAction(action: "start" | "pause" | "stop") {
     if (!bot) return
@@ -1232,7 +1256,7 @@ export default function BotDetailPage() {
                   ))}
                 </div>
               </div>
-              <CandlestickChart candles={candles} trades={trades} symbol={bot.tradingPair} tr={tr} />
+              <CandlestickChart candles={candles} trades={trades} symbol={bot.tradingPair} tr={tr} marketPrice={marketPrice} />
             </Card>
 
             <Card className="p-4 sm:p-6 border border-border">
